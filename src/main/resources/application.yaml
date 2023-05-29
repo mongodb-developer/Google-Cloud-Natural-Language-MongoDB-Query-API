@@ -1,0 +1,5 @@
+ktor:
+  deployment:
+    port: ${PORT:8080}
+  application:
+    modules: [ io.peerislands.ApplicationKt.module ]
