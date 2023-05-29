@@ -1,5 +1,7 @@
 ktor:
-  deployment:
-    port: ${PORT:8080}
   application:
     modules: [ io.peerislands.ApplicationKt.module ]
+    deployment:
+        port: ${PORT:8080}
+    endpoint: https://us-central1-aiplatform.googleapis.com/v1/projects/peer-poc/locations/us-central1/publishers/google/models/code-bison:predict
+

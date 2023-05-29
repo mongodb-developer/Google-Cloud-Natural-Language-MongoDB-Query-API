@@ -17,17 +17,18 @@ import io.peerislands.PredictResponse
 
 
 fun Application.configureRouting() {
+    //TODO: Get endpoint from config
     val endpoint =
         "https://us-central1-aiplatform.googleapis.com/v1/projects/peer-poc/locations/us-central1/publishers/google/models/code-bison:predict"
     routing {
         post("/predict") {
-            val request = call.receiveText()
+            val request = call.receiveText() //TODO: Can we use call.receive<PredictRequest>() instead?
             //Convert request to JSON using GSON
             val jsonRequest: PredictRequest = Gson().fromJson(request, PredictRequest::class.java)
             println("Request: $jsonRequest")
 
             val credentials: GoogleCredentials = GoogleCredentials.getApplicationDefault()
-            val token = credentials.refreshAccessToken()
+            val token = credentials.refreshAccessToken() //TODO: Is this the right way to get the token?
 
             //REST API Call
             val client = HttpClient() {
@@ -42,7 +43,7 @@ fun Application.configureRouting() {
                     append("Authorization", "Bearer ${token.tokenValue}")
                     append("Content-Type", "application/json")
                 }
-                setBody(
+                setBody(    //TODO: Can we extract this to a function?
                     """
                     {
                         "instances": [
@@ -63,6 +64,7 @@ fun Application.configureRouting() {
             }
 
             //Parse response to JSONResponse using GSON
+            //TODO: Improve error handling and response
             val predictResponse = Gson().fromJson(response.bodyAsText(), PredictResponse::class.java)
             if (predictResponse.predictions.isNotEmpty())
                 call.respondText(predictResponse.predictions[0].content, ContentType.Text.Plain)
