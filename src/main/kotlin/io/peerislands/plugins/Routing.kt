@@ -11,67 +11,99 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
 import io.peerislands.PredictRequest
 
 import io.peerislands.PredictResponse
+import io.peerislands.endpoint
 
 
 fun Application.configureRouting() {
-    //TODO: Get endpoint from config
-    val endpoint =
-        "https://us-central1-aiplatform.googleapis.com/v1/projects/peer-poc/locations/us-central1/publishers/google/models/code-bison:predict"
     routing {
-        post("/predict") {
-            val request = call.receiveText() //TODO: Can we use call.receive<PredictRequest>() instead?
-            //Convert request to JSON using GSON
-            val jsonRequest: PredictRequest = Gson().fromJson(request, PredictRequest::class.java)
-            println("Request: $jsonRequest")
+        post("/api/v1/predict") {
+            //STEP 1: Get question from request
+            val jsonRequest: PredictRequest = predictRequest()
 
-            val credentials: GoogleCredentials = GoogleCredentials.getApplicationDefault()
-            val token = credentials.refreshAccessToken() //TODO: Is this the right way to get the token?
+            //STEP 2: Construct Prompt
+            val prompt = constructPrompt(jsonRequest)
 
-            //REST API Call
-            val client = HttpClient() {
-                install(Logging) {
-                    logger = Logger.DEFAULT
-                    level = LogLevel.HEADERS
-                }
-            }
-            val response: HttpResponse = client.request(endpoint) {
-                method = HttpMethod.Post
-                headers {
-                    append("Authorization", "Bearer ${token.tokenValue}")
-                    append("Content-Type", "application/json")
-                }
-                setBody(    //TODO: Can we extract this to a function?
-                    """
+            //STEP 3: Call GEN AI code-bison endpoint
+            val response: HttpResponse = callGenAI(prompt)
+
+            //STEP 4: Parse response and get answer / code
+            val answer: String = parseResponse(response)
+
+            //STEP 5: Run validations
+            //          - Check for syntax errors
+            //          - Check for semantic errors - field names, data types, etc.
+            //STEP 6: Regenerate code if any errors
+
+            //STEP 7: Return response
+            call.respondText(answer, ContentType.Text.Plain)
+
+        }
+    }
+}
+
+private suspend fun parseResponse(response: HttpResponse): String {
+    //Parse response to JSONResponse using GSON
+    //TODO: Improve error handling and response
+    val predictResponse = Gson().fromJson(response.bodyAsText(), PredictResponse::class.java)
+    val answer: String
+    if (predictResponse.predictions.isNotEmpty()) {
+        answer = predictResponse.predictions[0].content
+    } else {
+        answer = "No predictions found"
+    }
+    return answer
+}
+
+private suspend fun callGenAI(prompt: String): HttpResponse {
+    val credentials: GoogleCredentials = GoogleCredentials.getApplicationDefault()
+    val token = credentials.refreshAccessToken() //TODO: Is this the right way to get the token?
+
+    //REST API Call
+    val client = HttpClient() {
+        install(Logging) {
+            logger = Logger.DEFAULT
+            level = LogLevel.HEADERS
+        }
+    }
+    val response: HttpResponse = client.request(endpoint) {
+        method = HttpMethod.Post
+        headers {
+            append("Authorization", "Bearer ${token.tokenValue}")
+            append("Content-Type", "application/json")
+        }
+        setBody(prompt)
+    }
+    return response
+}
+
+fun constructPrompt(jsonRequest: PredictRequest): String {
+    //          - Infer collection from question
+    //          - Infer question type from question
+    //          - Update Prompt template with question, schema and relevant examples
+    return """
                     {
                         "instances": [
                             {
-                            "prefix": "Write a MongoDB update statement. Replace the “Completed” inspection result to use only “No Violation Issued” for those inspections. Update all the cases accordingly. Use the following schema for inspections collection. _id bson.objectid.ObjectId id str certificate_number int business_name str date str result str sector str address dict",
-                            "suffix": ""
+                            "prefix": "${jsonRequest.instances[0].prefix}",
+                            "suffix": "${jsonRequest.instances[0].suffix}"
                             }
                         ],
                         "parameters": {
                             "task": "GENERATION",
-                            "temperature": 0.2,
-                            "maxOutputTokens": 512,
+                            "temperature": 0.3,
+                            "maxOutputTokens": 256,
                             "candidateCount": 1,
                         }
                     }
                     """.trimIndent()
-                )
-            }
+}
 
-            //Parse response to JSONResponse using GSON
-            //TODO: Improve error handling and response
-            val predictResponse = Gson().fromJson(response.bodyAsText(), PredictResponse::class.java)
-            if (predictResponse.predictions.isNotEmpty())
-                call.respondText(predictResponse.predictions[0].content, ContentType.Text.Plain)
-            else
-                call.respondText("No predictions found", ContentType.Text.Plain)
-
-        }
-    }
+private suspend fun PipelineContext<Unit, ApplicationCall>.predictRequest(): PredictRequest {
+    val request = call.receiveText() //TODO: Can we use call.receive<PredictRequest>() instead?
+    return Gson().fromJson(request, PredictRequest::class.java)
 }
 
