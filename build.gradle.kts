@@ -25,13 +25,13 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.ktor:ktor-client-logging-jvm:2.3.0")
+    implementation("io.ktor:ktor-server-mustache-jvm:2.3.0")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
 
     implementation("io.ktor:ktor-jackson:1.6.8")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("com.google.cloud:google-cloud-aiplatform:3.19.0")
-
 
     //GSON
     implementation("com.google.code.gson:gson:2.8.6")

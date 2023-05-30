@@ -16,7 +16,7 @@ fun Application.configureRouting() {
             val jsonRequest: PredictRequest = predictRequest()
 
             //STEP 2: Construct Prompt
-            val prompt = constructPrompt(jsonRequest)
+            val prompt = constructPayload(jsonRequest)
 
             //STEP 3: Call GEN AI code-bison endpoint
             val response: HttpResponse = callGenAI(prompt)
