@@ -34,15 +34,24 @@ fun Application.configureRouting() {
             val answer: String = parseResponse(response)
 
             //STEP 5: Run validations
-            //          - Check for syntax errors
-            //          - Check for semantic errors - field names, data types, etc.
+            val isValid: Boolean = validateResponse(answer)
+
             //STEP 6: Regenerate code if any errors
+            if (!isValid) {
+                TODO()
+            }
 
             //STEP 7: Return response
             call.respondText(answer, ContentType.Text.Plain)
 
         }
     }
+}
+
+private suspend fun validateResponse(answer: String): Boolean {
+    //          - Check for syntax errors
+    //          - Check for semantic errors - field names, data types, etc.
+    TODO()
 }
 
 private suspend fun parseResponse(response: HttpResponse): String {
