@@ -1,4 +1,4 @@
-package io.peerislands
+package io.peerislands.model
 
 import com.google.gson.annotations.SerializedName
 
