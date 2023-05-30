@@ -3,23 +3,25 @@ package io.peerislands
 import io.peerislands.model.PredictRequest
 
 fun constructPrompt(jsonRequest: PredictRequest): String {
-    //          - Infer collection from question
-    //          - Infer question type from question
-    //          - Update Prompt template with question, schema and relevant examples
+    //TODO:          - Infer collection from question
+    //TODO:          - Get schema from collection
+    //TODO:          - Infer question type from question
+    //TODO:          - Get relevant examples from the question type
+    //TODO:          - Update Prompt template with question, schema and relevant examples
     return """
+            {
+                "instances": [
                     {
-                        "instances": [
-                            {
-                            "prefix": "${jsonRequest.instances[0].prefix}",
-                            "suffix": "${jsonRequest.instances[0].suffix}"
-                            }
-                        ],
-                        "parameters": {
-                            "task": "GENERATION",
-                            "temperature": 0.3,
-                            "maxOutputTokens": 256,
-                            "candidateCount": 1,
-                        }
+                    "prefix": "${jsonRequest.instances[0].prefix}",
+                    "suffix": "${jsonRequest.instances[0].suffix}"
                     }
-                    """.trimIndent()
+                ],
+                "parameters": {
+                    "task": "GENERATION",
+                    "temperature": ${jsonRequest.parameters.temperature},
+                    "maxOutputTokens": 512,
+                    "candidateCount": 1,
+                }
+            }
+            """.trimIndent()
 }

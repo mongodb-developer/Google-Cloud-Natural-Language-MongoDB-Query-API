@@ -8,5 +8,7 @@ import io.peerislands.model.PredictRequest
 
 suspend fun PipelineContext<Unit, ApplicationCall>.predictRequest(): PredictRequest {
     val request = call.receiveText() //TODO: Can we use call.receive<PredictRequest>() instead?
-    return Gson().fromJson(request, PredictRequest::class.java)
+    val requestJson = Gson().fromJson(request, PredictRequest::class.java)
+    //TODO: Validate requestJson
+    return requestJson
 }
