@@ -12,5 +12,5 @@ suspend fun parseResponse(response: HttpResponse): String {
         predictResponse.predictions[0].content
     else
         "No predictions found"
-    return answer
+    return answer.replace("```", "")
 }

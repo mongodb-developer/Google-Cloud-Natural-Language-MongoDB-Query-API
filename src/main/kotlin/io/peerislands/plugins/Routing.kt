@@ -23,10 +23,9 @@ fun Application.configureRouting() {
 //
 //            //STEP 4: Parse response and get answer / code
             val answer: String = parseResponse(response)
-            val trimmedAnswer = answer.replace("```", "")
 
             //STEP 5: Run validations
-            val isValid: Boolean = validateResponse(trimmedAnswer)
+            val isValid: Boolean = validateResponse(answer)
 
             //STEP 6: Regenerate code if any errors
             if (!isValid) {
@@ -36,7 +35,7 @@ fun Application.configureRouting() {
             }
 
             //STEP 7: Return response
-            call.respondText(trimmedAnswer, ContentType.Text.Plain)
+            call.respondText(answer, ContentType.Text.Plain)
 
         }
     }
