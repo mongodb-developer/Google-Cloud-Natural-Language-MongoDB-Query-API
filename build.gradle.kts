@@ -35,6 +35,8 @@ dependencies {
 
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
 
+    implementation("org.mongodb:mongodb-driver-sync:4.9.1")
+
     //GSON
     implementation("com.google.code.gson:gson:2.8.6")
 }

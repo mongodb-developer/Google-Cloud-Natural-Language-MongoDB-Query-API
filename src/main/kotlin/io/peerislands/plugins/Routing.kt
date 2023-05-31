@@ -20,21 +20,23 @@ fun Application.configureRouting() {
 
             //STEP 3: Call GEN AI code-bison endpoint
             val response: HttpResponse = callGenAI(prompt)
-
-            //STEP 4: Parse response and get answer / code
+//
+//            //STEP 4: Parse response and get answer / code
             val answer: String = parseResponse(response)
+            val trimmedAnswer = answer.replace("```", "")
 
             //STEP 5: Run validations
-            val isValid: Boolean = validateResponse(answer)
+            val isValid: Boolean = validateResponse(trimmedAnswer)
 
             //STEP 6: Regenerate code if any errors
             if (!isValid) {
-                TODO()
+                print("Invalid response. Regenerating code...")
+            } else {
+                print("Valid response. Returning code...")
             }
 
             //STEP 7: Return response
-            answer.replace("```", "")
-            call.respondText(answer, ContentType.Text.Plain)
+            call.respondText(trimmedAnswer, ContentType.Text.Plain)
 
         }
     }
