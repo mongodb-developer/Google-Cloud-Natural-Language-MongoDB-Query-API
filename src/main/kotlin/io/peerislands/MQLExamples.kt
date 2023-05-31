@@ -66,6 +66,7 @@ val findExamples = """
             }
           ]
         )
+        
 """.trimIndent()
 
 val insertExamples = """

@@ -33,6 +33,7 @@ fun Application.configureRouting() {
             }
 
             //STEP 7: Return response
+            answer.replace("```", "")
             call.respondText(answer, ContentType.Text.Plain)
 
         }
