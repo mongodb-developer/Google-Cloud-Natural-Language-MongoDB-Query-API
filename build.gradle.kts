@@ -33,6 +33,8 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("com.google.cloud:google-cloud-aiplatform:3.19.0")
 
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
+
     //GSON
     implementation("com.google.code.gson:gson:2.8.6")
 }
