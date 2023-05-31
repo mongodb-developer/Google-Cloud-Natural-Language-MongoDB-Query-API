@@ -21,6 +21,24 @@ val updateExamples = """
              ${'$'}currentDate: { lastModified: true }
            }
         )
+        
+        db.products.updateOne(
+           { sku: 'abc123' },
+           { ${'$'}inc: { quantity: -2, 'metrics.orders': 1 } }
+        )
+        
+        db.students.updateOne(
+           {
+             _id: 5,
+             grades: { ${'$'}elemMatch: { grade: { ${'$'}lte: 90 }, mean: { ${'$'}gt: 80 } } }
+           },
+           { ${'$'}set: { 'grades.${'$'}.std' : 6 } }
+        )
+        
+        db.students_deans_list.updateOne(
+           { activity_ids: 1, grades: 95, deans_list: 2021 },
+           { ${'$'}set: { 'deans_list.${'$'}': 2022 } }
+        )
     """.trimIndent()
 
 val deleteExamples = """
@@ -33,6 +51,21 @@ val findExamples = """
         db.inventory.find( { status: 'D' } )
         
         db.inventory.find( { status: 'A' } )
+        
+        db.scores.aggregate(
+          [
+            {
+              ${'$'}match: {
+                score: {
+                  ${'$'}gt: 80
+                }
+              }
+            },
+            {
+              ${'$'}count: 'passing_scores'
+            }
+          ]
+        )
 """.trimIndent()
 
 val insertExamples = """

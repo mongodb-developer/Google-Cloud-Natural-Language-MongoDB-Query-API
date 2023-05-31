@@ -48,6 +48,7 @@ fun getCollectionName(question: String): String {
     return when {
         inspectionKeywords.any { question.contains(it, ignoreCase = true) } -> "inspections"
         gradesKeywords.any { question.contains(it, ignoreCase = true) } -> "grades"
+        companiesKeywords.any { question.contains(it, ignoreCase = true) } -> "companies"
         else -> "movies"
     }
 }
@@ -67,6 +68,8 @@ fun evaluateQuestionType(question: String): String {
 private fun getSchema(collection: String): String {
     return when (collection) {
         "inspections" -> inspectionSchema
+        "grades" -> gradesSchema
+        "companies" -> companiesSchema
         else -> ""
     }
 }
