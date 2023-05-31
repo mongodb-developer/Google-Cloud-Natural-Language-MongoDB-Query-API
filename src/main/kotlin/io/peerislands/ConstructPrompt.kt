@@ -3,7 +3,6 @@ package io.peerislands
 import io.peerislands.model.PredictRequest
 
 fun constructPayload(jsonRequest: PredictRequest): String {
-    //TODO:          - Infer collection from question
     //TODO:          - Get schema from collection
     //TODO:          - Infer question type from question
     //TODO:          - Get relevant examples from the question type
@@ -35,31 +34,51 @@ fun constructPayload(jsonRequest: PredictRequest): String {
 }
 
 private fun constructPrompt(question: String): String {
-    val prompt = promptTemplate
+    val collection = getCollectionName(question)
+    val questionType = evaluateQuestionType(question)
+    return promptTemplate
         .replace("{{question}}", question)
-        .replace("{{schema}}", getSchema("inspections"))
-        .replace("{{examples}}", getExamples())
-    return prompt
+        .replace("{{schema}}", getSchema(collection))
+        .replace("{{examples}}", getExamples(questionType))
+}
+
+fun getCollectionName(question: String): String {
+    //TODO:          - Infer collection from question - use keywords
+    //Check if question contains any of the following keywords
+    return when {
+        inspectionKeywords.any { question.contains(it, ignoreCase = true) } -> "inspections"
+        gradesKeywords.any { question.contains(it, ignoreCase = true) } -> "grades"
+        else -> "movies"
+    }
+}
+
+fun evaluateQuestionType(question: String): String {
+    //Check if question contains any of the following keywords
+    val questionType = when {
+        updateKeywords.any { question.contains(it, ignoreCase = true) } -> "update"
+        insertKeywords.any { question.contains(it, ignoreCase = true) } -> "insert"
+        deleteKeywords.any { question.contains(it, ignoreCase = true) } -> "delete"
+        findKeywords.any { question.contains(it, ignoreCase = true) } -> "find"
+        else -> "find"
+    }
+    return questionType
 }
 
 private fun getSchema(collection: String): String {
-    val schema = """
-        _id ObjectId 
-        certificate_number int 
-        business_name str 
-        date str 
-        result str 
-        sector str 
-        address dict
-    """.trimIndent()
-    return schema
+    return when (collection) {
+        "inspections" -> inspectionSchema
+        else -> ""
+    }
 }
 
-private fun getExamples(): String {
-    val examples = """
-        
-    """.trimIndent()
-    return examples
+private fun getExamples(questionType: String): String {
+    return when (questionType) {
+        "update" -> updateExamples
+        "insert" -> insertExamples
+        "delete" -> deleteExamples
+        "find" -> findExamples
+        else -> ""
+    }
 }
 
 val promptTemplate = """
