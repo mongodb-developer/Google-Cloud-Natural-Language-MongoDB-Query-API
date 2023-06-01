@@ -1,5 +1,6 @@
 package io.peerislands.plugins
 
+import com.google.gson.Gson
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -19,13 +20,14 @@ fun Application.configureRouting() {
             val prompt = constructPayload(jsonRequest)
 
             //STEP 3: Call GEN AI code-bison endpoint
-            val response: HttpResponse = callGenAI(prompt)
+            val generatedCode: HttpResponse = callGenAI(prompt)
 //
 //            //STEP 4: Parse response and get answer / code
-            val answer: String = parseResponse(response)
+            val parsedCode: String = parseResponse(generatedCode)
+            println("parsedCode: $parsedCode")
 
             //STEP 5: Run validations
-            val isValid: Boolean = validateResponse(answer)
+            val isValid: Boolean = validateResponse(parsedCode)
 
             //STEP 6: Regenerate code if any errors
             if (!isValid) {
@@ -35,11 +37,10 @@ fun Application.configureRouting() {
             }
 
             //STEP 7: Return response
-            call.respondText(answer, ContentType.Text.Plain)
-
+            val response = buildResponse(parsedCode, prompt)
+            call.respondText(response, ContentType.Application.Json);
         }
     }
 }
-
 
 
