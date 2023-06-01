@@ -36,9 +36,17 @@ fun Application.configureRouting() {
                 print("Valid response. Returning code...")
             }
 
-            //STEP 7: Return response
+            //STEP 7: Store question, prompt, and response in MongoDB
+            storeInMongoDB(jsonRequest, prompt, parsedCode)
+
+            //STEP 8: Return response
             val response = buildResponse(parsedCode, prompt)
-            call.respondText(response, ContentType.Application.Json);
+            call.respondText(response, ContentType.Application.Json)
+        }
+        get("/api/v1/history") {
+            val limit = call.parameters["limit"]?.toInt() ?: 10
+            val response = getHistory(limit)
+            call.respondText(response, ContentType.Application.Json)
         }
     }
 }
