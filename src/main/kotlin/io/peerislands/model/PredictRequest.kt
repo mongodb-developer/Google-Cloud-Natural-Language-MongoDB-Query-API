@@ -6,11 +6,13 @@ data class PredictRequest(
 )
 data class Instance(
     val prefix: String,
-    val suffix: String
+    val suffix: String = "",
+    val context: String = "",
+    val examples: String = ""
 )
 data class Parameters(
-    val task: String,
-    val temperature: Double,
-    val maxOutputTokens: Int,
-    val candidateCount: Int
+    val task: String = "GENERATION",
+    val temperature: Double = 0.3,
+    val maxOutputTokens: Int = 512,
+    val candidateCount: Int = 1
 )

@@ -10,8 +10,10 @@ fun constructPayload(jsonRequest: PredictRequest): String {
     //TODO:          - Get relevant examples from the question type
     //TODO:          - Update Prompt template with question, schema and relevant examples
     val question = jsonRequest.instances[0].prefix
+    val userProvidedContext = jsonRequest.instances[0].context
+    val userProvidedExamples = jsonRequest.instances[0].examples
 
-    val prompt = constructPrompt(question)
+    val prompt = constructPrompt(question, userProvidedContext, userProvidedExamples)
 
     logger.info{ "Prompt: $prompt" }
 
@@ -26,7 +28,7 @@ fun constructPayload(jsonRequest: PredictRequest): String {
                 "parameters": {
                     "task": "GENERATION",
                     "temperature": ${jsonRequest.parameters.temperature},
-                    "maxOutputTokens": 512,
+                    "maxOutputTokens": ${jsonRequest.parameters.maxOutputTokens},
                     "candidateCount": 1,
                 }
             }
@@ -35,13 +37,21 @@ fun constructPayload(jsonRequest: PredictRequest): String {
     return payload.toString()
 }
 
-private fun constructPrompt(question: String): String {
+private fun constructPrompt(
+    question: String,
+    userProvidedContext: String, userProvidedExamples: String): String {
     val collection = getCollectionName(question)
     val questionType = evaluateQuestionType(question)
     return promptTemplate
         .replace("{{question}}", question)
-        .replace("{{schema}}", getSchema(collection))
-        .replace("{{examples}}", getExamples(questionType))
+        .replace(
+            "{{schema}}",
+            getSchema(collection).plus("\n").plus(userProvidedContext)
+        )
+        .replace(
+            "{{examples}}",
+            getExamples(questionType).plus("\n").plus(userProvidedExamples)
+        )
 }
 
 fun getCollectionName(question: String): String {
@@ -89,11 +99,11 @@ private fun getExamples(questionType: String): String {
 val promptTemplate = """
 Generate MongoDB query.
 {{question}}
----
+------------------------------------------------------------
 Use the schema model below to construct the query.
 {{schema}}
----
+------------------------------------------------------------
 Use the examples below to construct the query.
 {{examples}}
----
+------------------------------------------------------------
 """.trimIndent()

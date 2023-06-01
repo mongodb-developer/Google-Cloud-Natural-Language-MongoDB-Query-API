@@ -21,8 +21,8 @@ fun Application.configureRouting() {
 
             //STEP 3: Call GEN AI code-bison endpoint
             val generatedCode: HttpResponse = callGenAI(prompt)
-//
-//            //STEP 4: Parse response and get answer / code
+
+            //STEP 4: Parse response and get answer / code
             val parsedCode: String = parseResponse(generatedCode)
             logger.info { "parsedCode: $parsedCode" }
 

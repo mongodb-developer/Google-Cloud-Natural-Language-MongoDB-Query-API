@@ -51,18 +51,18 @@ fun validateSyntax(answer: String): Boolean {
     return try {
         val extractedQuery = extractQuery(answer)
         when (getOperation(answer)) {
-            "insertOne" -> collection.insertOne(Document(extractedQuery[0] as Map<String, Any>))
+            "insertOne" -> collection.insertOne(Document.parse(OBJECT_MAPPER.writeValueAsString(extractedQuery[0] as Map<String, Any>)))
             "insertMany" -> collection.insertMany((extractedQuery[0] as List<Map<String, Any>>).map { item ->
-                Document(
-                    item
+                Document.parse(
+                    OBJECT_MAPPER.writeValueAsString(item)
                 )
             })
             "aggregate" -> collection.aggregate((extractedQuery[0] as List<Map<String, Any>>).map { item ->
-                Document(
-                    item
+                Document.parse(
+                    OBJECT_MAPPER.writeValueAsString(item)
                 )
             }).first()
-            "find" -> collection.find(Document(extractedQuery[0] as Map<String, Any>)).first()
+            "find" -> collection.find(Document.parse(OBJECT_MAPPER.writeValueAsString(extractedQuery[0] as Map<String, Any>))).first()
         }
         true
     } catch (e: Exception) {
@@ -72,7 +72,7 @@ fun validateSyntax(answer: String): Boolean {
 
 fun extractQuery(answer: String): List<Any> {
     val funArgs = answer.substring(answer.indexOf(OPEN_PAREN) + 1, answer.lastIndexOf(CLOSE_PAREN))
-    return OBJECT_MAPPER.readValue("[$funArgs]", object : TypeReference<List<Any>>() {})
+    return OBJECT_MAPPER.readValue("[$funArgs]".convertObjectIdSyntax(), object : TypeReference<List<Any>>() {})
 }
 
 fun getOperation(answer: String): String {
@@ -138,9 +138,10 @@ fun extractFieldsFromQuery(mQuery: Map<String, Any>): List<String> {
     mQuery.entries.forEach {
             entry ->
         if(entry.value is Map<*, *>) {
-            resultList.addAll(extractFieldsFromQuery(entry.value as Map<String, Any>))
+            if(entry.key != "\$elemMatch") // Excluding validation on elemMatch
+                resultList.addAll(extractFieldsFromQuery(entry.value as Map<String, Any>))
         } else if(entry.value is List<*>) {
-            (entry.value as List<Any>).forEach {
+            (entry.value as List<*>).forEach {
                     item ->
                 if(item is Map<*, *>) {
                     resultList.addAll(extractFieldsFromQuery(entry.value as Map<String, Any>))
@@ -166,4 +167,15 @@ fun String.toMongoDBFieldName(): String {
 fun validateFindQueryFields(query: Map<String, Any>): Boolean {
     val fieldList = getFieldsFromSchema(inspectionSchema, gradesSchema, companiesSchema)
     return extractFieldsFromQuery(query).all { fieldList.contains(it)  }
+}
+
+fun String.convertObjectIdSyntax(): String {
+    val regex = Regex(pattern = """ObjectId\("(\w+)"\)""", options = setOf(RegexOption.IGNORE_CASE))
+    var resultQuery = this
+    regex.findAll(this).forEach {
+        val objectId = it.value
+        println(objectId)
+        resultQuery = resultQuery.replace(objectId, """{"${'$'}oid": "${objectId.substring(objectId.indexOf("\"")+1, objectId.lastIndexOf("\""))}"}""")
+    }
+    return resultQuery
 }
