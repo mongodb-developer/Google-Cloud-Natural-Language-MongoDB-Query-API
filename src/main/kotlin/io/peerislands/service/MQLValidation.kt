@@ -1,6 +1,6 @@
-package io.peerislands
+package io.peerislands.service
 
-import com.mongodb.client.MongoClients
+import io.peerislands.mongoClient
 import org.bson.BsonDocument
 
 fun validateResponse(answer: String): Boolean {
@@ -20,8 +20,7 @@ fun validateSyntax(answer: String): Boolean {
     //Get find section of the query
     val findSection = answer
 
-    val client = MongoClients.create()
-    val db = client.getDatabase("test")
+    val db = mongoClient.getDatabase("test")
     val collection = db.getCollection("test")
     return try {
         val query = BsonDocument.parse(findSection)

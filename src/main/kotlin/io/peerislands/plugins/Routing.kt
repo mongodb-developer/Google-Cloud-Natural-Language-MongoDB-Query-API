@@ -1,13 +1,13 @@
 package io.peerislands.plugins
 
-import com.google.gson.Gson
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.peerislands.*
+import io.peerislands.logger
 import io.peerislands.model.PredictRequest
+import io.peerislands.service.*
 
 
 fun Application.configureRouting() {
@@ -24,16 +24,16 @@ fun Application.configureRouting() {
 //
 //            //STEP 4: Parse response and get answer / code
             val parsedCode: String = parseResponse(generatedCode)
-            println("parsedCode: $parsedCode")
+            logger.info { "parsedCode: $parsedCode" }
 
             //STEP 5: Run validations
             val isValid: Boolean = validateResponse(parsedCode)
 
             //STEP 6: Regenerate code if any errors
             if (!isValid) {
-                print("Invalid response. Regenerating code...")
+                logger.info { "Invalid response. Regenerating code..." }
             } else {
-                print("Valid response. Returning code...")
+                logger.info { "Valid response. Proceeding..." }
             }
 
             //STEP 7: Store question, prompt, and response in MongoDB

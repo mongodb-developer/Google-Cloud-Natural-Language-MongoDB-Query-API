@@ -1,4 +1,4 @@
-package io.peerislands
+package io.peerislands.service
 
 import com.google.auth.oauth2.GoogleCredentials
 import io.ktor.client.*
@@ -6,6 +6,7 @@ import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.peerislands.endpoint
 
 suspend fun callGenAI(prompt: String): HttpResponse {
     val credentials: GoogleCredentials = GoogleCredentials.getApplicationDefault()

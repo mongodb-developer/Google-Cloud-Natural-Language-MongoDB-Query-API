@@ -1,5 +1,7 @@
-package io.peerislands
+package io.peerislands.service
 
+import io.peerislands.data.*
+import io.peerislands.logger
 import io.peerislands.model.PredictRequest
 
 fun constructPayload(jsonRequest: PredictRequest): String {
@@ -11,7 +13,7 @@ fun constructPayload(jsonRequest: PredictRequest): String {
 
     val prompt = constructPrompt(question)
 
-    print("Prompt: $prompt")
+    logger.info{ "Prompt: $prompt" }
 
     val payload = """
             {

@@ -1,4 +1,4 @@
-package io.peerislands
+package io.peerislands.service
 
 import com.google.gson.Gson
 import io.ktor.client.statement.*

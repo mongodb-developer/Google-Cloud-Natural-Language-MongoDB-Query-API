@@ -1,4 +1,4 @@
-package io.peerislands
+package io.peerislands.data
 
 val updateKeywords = listOf("update", "change", "modify", "alter")
 val insertKeywords = listOf("insert", "add", "create")

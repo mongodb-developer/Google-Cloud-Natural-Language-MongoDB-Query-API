@@ -1,4 +1,4 @@
-package io.peerislands
+package io.peerislands.data
 
 val inspectionKeywords = listOf("inspections", "violations")
 val inspectionSchema = """
