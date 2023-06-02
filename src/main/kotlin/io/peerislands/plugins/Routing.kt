@@ -48,6 +48,15 @@ fun Application.configureRouting() {
             val response = getHistory(limit)
             call.respondText(response, ContentType.Application.Json)
         }
+        get("/api/v1/schema") {
+            val collectionName = call.parameters["collection"] ?: "sample"
+            val response = getSampleSchema(collectionName)
+            call.respondText(response, ContentType.Application.Json)
+        }
+        get("/api/v1/collection_list") {
+            val response = getCollectionList()
+            call.respondText(response, ContentType.Application.Json)
+        }
     }
 }
 
