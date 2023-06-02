@@ -1,3 +1,4 @@
+@file:Suppress("UNCHECKED_CAST")
 package io.peerislands.service
 
 import com.fasterxml.jackson.core.JsonParser
@@ -56,6 +57,7 @@ fun validateSemantics(answer: String): Boolean {
     return when (getOperation(answer)) {
         "insertOne", "insertMany" -> true // No validation for now
         "find" -> validateFindQueryFields(extractedQuery[0] as Map<String, Any>)
+        "aggregate" -> validateAggregateQueryFields(extractedQuery[0] as List<Map<String, Any>>)
         else -> true // Need to be false. Temporarily returning true to bypass other operations
     }
 }
@@ -87,8 +89,8 @@ fun validateSyntax(answer: String): Boolean {
 }
 
 fun extractQuery(answer: String): List<Any> {
-    val funArgs = answer.substring(answer.indexOf(OPEN_PAREN) + 1, answer.lastIndexOf(CLOSE_PAREN))
-    return OBJECT_MAPPER.readValue("[$funArgs]".convertObjectIdSyntax(), object : TypeReference<List<Any>>() {})
+    val funArgs = answer.convertToBsonSyntax().substring(answer.indexOf(OPEN_PAREN) + 1, answer.indexOf(CLOSE_PAREN))
+    return OBJECT_MAPPER.readValue("[$funArgs]", object : TypeReference<List<Any>>() {})
 }
 
 fun getOperation(answer: String): String {
@@ -194,4 +196,30 @@ fun String.convertObjectIdSyntax(): String {
         resultQuery = resultQuery.replace(objectId, """{"${'$'}oid": "${objectId.substring(objectId.indexOf("\"")+1, objectId.lastIndexOf("\""))}"}""")
     }
     return resultQuery
+}
+
+fun validateAggregateQueryFields(query: List<Map<String, Any>>): Boolean {
+    val fieldList = getFieldsFromSchema(inspectionSchema, gradesSchema, companiesSchema)
+    val queryFieldList = mutableListOf<String>()
+    query.forEach{
+        queryFieldList.addAll(extractFieldsFromQuery(it))
+    }
+    return queryFieldList.all { fieldList.contains(it) }
+}
+
+fun String.convertDateSyntax(): String {
+    val regex = Regex(pattern = """new\s+Date\([^)]+\)""", options = setOf(RegexOption.IGNORE_CASE))
+    var resultQuery = this
+    regex.findAll(this).forEach {
+        val date = it.value
+        resultQuery = resultQuery.replace(
+            date,
+            """"${date.substring(date.indexOf("\"") + 1, date.lastIndexOf("\""))}""""
+        )
+    }
+    return resultQuery
+}
+
+fun String.convertToBsonSyntax(): String {
+    return this.convertObjectIdSyntax().convertDateSyntax()
 }
