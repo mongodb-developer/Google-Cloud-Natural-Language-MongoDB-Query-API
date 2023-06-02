@@ -9,6 +9,7 @@ import com.mongodb.client.MongoClients
 import io.peerislands.data.companiesSchema
 import io.peerislands.data.gradesSchema
 import io.peerislands.data.inspectionSchema
+import io.peerislands.logger
 import org.bson.Document
 import java.util.Scanner
 
@@ -27,10 +28,21 @@ val OBJECT_MAPPER: ObjectMapper = ObjectMapper().registerModule(
     .configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
 
 fun validateResponse(answer: String): Boolean {
-    //          - Check for syntax errors
-    val validSyntax = validateSyntax(answer)
-    //          - Check for semantic errors - field names, data types, etc.
-    val validSemantics = validateSemantics(answer)
+    val validSyntax: Boolean =
+    try {
+        validateSyntax(answer)
+    } catch (e: Exception) {
+        logger.error { "Error validating response: ${e.message}" }
+        false
+    }
+
+    val validSemantics: Boolean =
+    try {
+        validateSemantics(answer)
+    } catch (e: Exception) {
+        logger.error { "Error validating response: ${e.message}" }
+        false
+    }
 
     return validSyntax && validSemantics
 }

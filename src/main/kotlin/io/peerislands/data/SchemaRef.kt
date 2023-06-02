@@ -21,9 +21,8 @@ val gradesSchema = """
     _id: ObjectId
     student_id: Int
     scores: Array
-        score: Object
-            type: String
-            score: Double
+        type: String
+        score: Double
     class_id: Int
 """.trimIndent()
 
@@ -82,4 +81,45 @@ val companiesSchema = """
             country_code: String
             latitude: String
             longitude: String
+""".trimIndent()
+
+val moviesKeywords = listOf("movies", "movie")
+val moviesSchema = """
+    _id: ObjectId
+    plot: String
+    genres: Array
+    runtime: Int
+    cast: Array
+    poster: String
+    title: String
+    fullplot: String
+    languages: Array
+    year: Int
+    released: Date
+    directors: Array
+    rated: String
+    awards: Object
+        wins: Int
+        nominations: Int
+        text: String
+    lastupdated: Timestamp
+    imdb: Object
+        rating: Int
+        votes: Int
+        id: Int
+    countries: Arrary
+    type: movie,
+    tomatoes: Object
+        viewer: Object
+            rating: Double
+            numReviews: Int
+            meter: Int
+        fresh: Int
+        critic: Object
+            rating: Double
+            numReviews: Int
+            meter: Int
+        rotten: Int
+        lastUpdated: Date
+    num_mflix_comments: Int
 """.trimIndent()
