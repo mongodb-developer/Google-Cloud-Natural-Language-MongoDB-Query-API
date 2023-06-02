@@ -3,8 +3,10 @@ package io.peerislands.plugins
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.peerislands.GSON
 import io.peerislands.logger
 import io.peerislands.model.PredictRequest
 import io.peerislands.service.*
@@ -20,7 +22,7 @@ fun Application.configureRouting() {
             val prompt = constructPayload(jsonRequest)
 
             //STEP 3: Call GEN AI code-bison endpoint
-            val generatedCode: HttpResponse = callGenAI(prompt)
+            val generatedCode: HttpResponse = callGenAIPredict(prompt)
 
             //STEP 4: Parse response and get answer / code
             val parsedCode: String = parseResponse(generatedCode)
@@ -57,7 +59,20 @@ fun Application.configureRouting() {
             val response = getCollectionList()
             call.respondText(response, ContentType.Application.Json)
         }
+        post("/api/v1/create_embedding") {
+            //STEP 1: Get text from request
+            val request = call.receiveText() //TODO: Can we use call.receive<PredictRequest>() instead?
+            val embeddings = storeEmbeddings(request)
+
+            call.respondText(GSON.toJson(embeddings), ContentType.Application.Json)
+        }
+        post("/api/v1/get_schema_for_question") {
+            val question = call.receiveText()
+            val schema = getSchemaForQuestionVS(question)
+            call.respondText(GSON.toJson(schema), ContentType.Application.Json)
+        }
     }
 }
+
 
 
