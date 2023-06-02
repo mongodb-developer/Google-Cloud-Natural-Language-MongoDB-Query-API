@@ -5,10 +5,6 @@ import io.peerislands.logger
 import io.peerislands.model.PredictRequest
 
 fun constructPayload(jsonRequest: PredictRequest): String {
-    //TODO:          - Get schema from collection
-    //TODO:          - Infer question type from question
-    //TODO:          - Get relevant examples from the question type
-    //TODO:          - Update Prompt template with question, schema and relevant examples
     val question = jsonRequest.instances[0].prefix
     val userProvidedContext = jsonRequest.instances[0].context
     val userProvidedExamples = jsonRequest.instances[0].examples
@@ -55,8 +51,7 @@ private fun constructPrompt(
 }
 
 fun getCollectionName(question: String): String {
-    //TODO:          - Infer collection from question - use keywords
-    //Check if question contains any of the following keywords
+    //TODO:          - Infer collection from question - can we use Vector Search?
     return when {
         inspectionKeywords.any { question.contains(it, ignoreCase = true) } -> "inspections"
         gradesKeywords.any { question.contains(it, ignoreCase = true) } -> "grades"
@@ -67,7 +62,7 @@ fun getCollectionName(question: String): String {
 }
 
 fun evaluateQuestionType(question: String): String {
-    //Check if question contains any of the following keywords
+    //TODO:          - Infer question type - can we use Vector Search?
     val questionType = when {
         updateKeywords.any { question.contains(it, ignoreCase = true) } -> "update"
         insertKeywords.any { question.contains(it, ignoreCase = true) } -> "insert"
@@ -79,6 +74,7 @@ fun evaluateQuestionType(question: String): String {
 }
 
 private fun getSchema(collection: String): String {
+    //TODO:          - Get collection schema - can we use Vector Search?
     return when (collection) {
         "inspections" -> inspectionSchema
         "grades" -> gradesSchema
@@ -89,6 +85,7 @@ private fun getSchema(collection: String): String {
 }
 
 private fun getExamples(questionType: String): String {
+    //TODO:          - Get Relevant examples - can we use Vector Search?
     return when (questionType) {
         "update" -> updateExamples
         "insert" -> insertExamples
@@ -98,6 +95,7 @@ private fun getExamples(questionType: String): String {
     }
 }
 
+//TODO: Improve the prompt template
 val promptTemplate = """
 Generate MongoDB query.
 {{question}}

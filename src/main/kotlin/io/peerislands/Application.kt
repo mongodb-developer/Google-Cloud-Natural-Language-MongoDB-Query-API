@@ -10,6 +10,7 @@ import io.ktor.server.plugins.cors.routing.CORS
 
 fun main() {
     logger.info { "Starting server at http://localhost:8080" }
+    //TODO: Get port from application.yaml
     embeddedServer(Netty, port = 8080, host = "localhost", module = Application::module)
         .start(wait = true)
 }
