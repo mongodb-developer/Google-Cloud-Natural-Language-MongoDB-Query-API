@@ -27,20 +27,20 @@ fun Application.configureRouting() {
             logger.info { "parsedCode: $parsedCode" }
 
             //STEP 5: Run validations
-            val isValid: Boolean = validateResponse(parsedCode)
+            val (validSyntax, validSemantics) = validateResponse(parsedCode)
 
             //STEP 6: Regenerate code if any errors
-            if (!isValid) {
+            if (!validSyntax || !validSemantics) {
                 logger.info { "Invalid response. Regenerating code..." }
             } else {
                 logger.info { "Valid response. Proceeding..." }
             }
 
             //STEP 7: Store question, prompt, and response in MongoDB
-            storeInMongoDB(jsonRequest, prompt, parsedCode)
+            storeInMongoDB(jsonRequest, prompt, parsedCode, validSyntax, validSemantics)
 
             //STEP 8: Return response
-            val response = buildResponse(parsedCode, prompt)
+            val response = buildResponse(parsedCode, prompt, validSyntax, validSemantics)
             call.respondText(response, ContentType.Application.Json)
         }
         get("/api/v1/history") {

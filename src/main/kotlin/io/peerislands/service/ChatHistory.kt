@@ -5,7 +5,11 @@ import io.peerislands.model.PredictRequest
 import io.peerislands.mongoClient
 import org.bson.Document
 
-fun storeInMongoDB(jsonRequest: PredictRequest, prompt: String, parsedCode: String) {
+fun storeInMongoDB(jsonRequest: PredictRequest,
+                   prompt: String,
+                   parsedCode: String,
+                   validSyntax: Boolean,
+                   validSemantics: Boolean) {
     val db = mongoClient.getDatabase("genai")
     val collection = db.getCollection("history")
     val document = Document()
@@ -16,6 +20,8 @@ fun storeInMongoDB(jsonRequest: PredictRequest, prompt: String, parsedCode: Stri
         .append("maxOutputTokens", jsonRequest.parameters.maxOutputTokens)
         .append("prompt", prompt)
         .append("code", parsedCode)
+        .append("validSyntax", validSyntax)
+        .append("validSemantics", validSemantics)
     val result = collection.insertOne(document)
     logger.info { "Inserted document: $result" }
 }

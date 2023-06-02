@@ -13,6 +13,10 @@ import io.peerislands.logger
 import org.bson.Document
 import java.util.Scanner
 
+data class ValidationResponse(
+    val validSyntax: Boolean,
+    val validSemantics: Boolean
+)
 
 const val OPEN_PAREN = "("
 const val CLOSE_PAREN = ")"
@@ -27,7 +31,7 @@ val OBJECT_MAPPER: ObjectMapper = ObjectMapper().registerModule(
     .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
     .configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
 
-fun validateResponse(answer: String): Boolean {
+fun validateResponse(answer: String): ValidationResponse {
     val validSyntax: Boolean =
     try {
         validateSyntax(answer)
@@ -44,7 +48,7 @@ fun validateResponse(answer: String): Boolean {
         false
     }
 
-    return validSyntax && validSemantics
+    return ValidationResponse(validSyntax, validSemantics)
 }
 
 fun validateSemantics(answer: String): Boolean {
