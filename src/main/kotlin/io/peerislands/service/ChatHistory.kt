@@ -10,6 +10,10 @@ fun storeInMongoDB(jsonRequest: PredictRequest, prompt: String, parsedCode: Stri
     val collection = db.getCollection("history")
     val document = Document()
         .append("question", jsonRequest.instances[0].prefix)
+        .append("context", jsonRequest.instances[0].context)
+        .append("examples", jsonRequest.instances[0].examples)
+        .append("temperature", jsonRequest.parameters.temperature)
+        .append("maxOutputTokens", jsonRequest.parameters.maxOutputTokens)
         .append("prompt", prompt)
         .append("code", parsedCode)
     val result = collection.insertOne(document)
@@ -19,7 +23,11 @@ fun storeInMongoDB(jsonRequest: PredictRequest, prompt: String, parsedCode: Stri
 fun getHistory(limit: Int): String {
     val db = mongoClient.getDatabase("genai")
     val collection = db.getCollection("history")
-    val documents = collection.find().limit(limit)
+
+    val documents = collection.find()
+        .sort(Document("_id", -1))
+        .limit(limit)
+
     val history = mutableListOf<Document>()
     documents.forEach { doc -> history.add(doc) }
     val gson = com.google.gson.GsonBuilder()
