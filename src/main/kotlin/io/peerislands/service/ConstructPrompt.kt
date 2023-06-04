@@ -110,9 +110,10 @@ private fun getExamples(questionType: String): String {
 
 //TODO: Improve the prompt template
 val promptTemplate = """
-Generate MongoDB query. 
+Generate the simplest MongoDB query possible. 
 Output should be a valid MongoDB query. 
 We should be able to run the query in mongo shell.
+------------------------------------------------------------
 Question: {{question}}
 ------------------------------------------------------------
 Use the schema model below to construct the query.
