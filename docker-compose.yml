@@ -6,3 +6,16 @@ services:
     image: genai-ui
     ports:
       - '3000:3000'
+
+  genai.api:
+    container_name: genai.api
+    image: genai-api
+    ports:
+      - '8080:8080'
+    environment:
+      - MONGODB_URI=mongodb+srv://genai:g3nai-m0ngo@sampledata.2zvcpfj.mongodb.net/?retryWrites=true&w=majority
+      - GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/gcloud_creds.json
+      - GENAI_PREDICT_ENDPOINT=https://us-central1-aiplatform.googleapis.com/v1/projects/peer-poc/locations/us-central1/publishers/google/models/code-bison:predict
+      - GENAI_TEXT_EMBEDDING_ENDPOINT=https://us-central1-aiplatform.googleapis.com/v1/projects/peer-poc/locations/us-central1/publishers/google/models/textembedding-gecko:predict
+    volumes:
+      - /Users/rajesh/.config/gcloud/application_default_credentials.json:/tmp/keys/gcloud_creds.json:ro

@@ -8,9 +8,6 @@ FROM mongo:6.0.6
 EXPOSE 27017:27017
 CMD ["mongod"]
 
-#Add React UI image from local
-FROM genai-ui:latest AS genai-ui
-
 FROM gradle:8-jdk17
 EXPOSE 8080:8080
 RUN mkdir /app
