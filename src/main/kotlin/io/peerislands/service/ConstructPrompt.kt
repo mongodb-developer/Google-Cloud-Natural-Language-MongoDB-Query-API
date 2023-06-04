@@ -4,7 +4,7 @@ import io.peerislands.data.*
 import io.peerislands.logger
 import io.peerislands.model.PredictRequest
 
-fun constructPayload(jsonRequest: PredictRequest): String {
+suspend fun constructPayload(jsonRequest: PredictRequest): String {
     val question = jsonRequest.instances[0].prefix
     val userProvidedContext = jsonRequest.instances[0].context
     val userProvidedExamples = jsonRequest.instances[0].examples
@@ -33,20 +33,33 @@ fun constructPayload(jsonRequest: PredictRequest): String {
     return payload.toString()
 }
 
-private fun constructPrompt(
+private suspend fun constructPrompt(
     question: String,
     userProvidedContext: String, userProvidedExamples: String): String {
-    val collection = getCollectionName(question)
+    val schemaContext = getSchemaForQuestionVS(question)
+    val collectionName = schemaContext.collectionName.ifEmpty { getCollectionName(question) }
+    val collectionSchema = schemaContext.collectionSchema.ifEmpty { getSchema(collectionName) }
+
     val questionType = evaluateQuestionType(question)
+    val examplesFromQuestionType = getExamples(questionType)
+
+    val examples = getExamplesForQuestionVS(question)
+    val exampleFromVS = examples.examples.map { it.example }
+
+    //For schema include userProvidedContext if it is not empty. Otherwise, use the schema from VS
     return promptTemplate
         .replace("{{question}}", question)
         .replace(
             "{{schema}}",
-            getSchema(collection).plus("\n").plus(userProvidedContext)
+            userProvidedContext.ifEmpty { collectionSchema }
         )
         .replace(
             "{{examples}}",
-            getExamples(questionType).plus("\n").plus(userProvidedExamples)
+            examplesFromQuestionType
+                .plus("\n")
+                .plus(exampleFromVS)
+                .plus("\n")
+                .plus(userProvidedExamples)
         )
 }
 
@@ -97,8 +110,10 @@ private fun getExamples(questionType: String): String {
 
 //TODO: Improve the prompt template
 val promptTemplate = """
-Generate MongoDB query.
-{{question}}
+Generate MongoDB query. 
+Output should be a valid MongoDB query. 
+We should be able to run the query in mongo shell.
+Question: {{question}}
 ------------------------------------------------------------
 Use the schema model below to construct the query.
 {{schema}}

@@ -1,6 +1,6 @@
 package io.peerislands.model
 
-data class EmbeddingsRequest (
+data class SchemaEmbeddingsRequest (
     val collectionName: String,
     val schema: String,
     val keywords: List<String>

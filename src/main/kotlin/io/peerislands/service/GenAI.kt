@@ -1,12 +1,12 @@
 package io.peerislands.service
 
-import com.google.gson.Gson
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.peerislands.*
-import io.peerislands.model.EmbeddingsRequest
+import io.peerislands.model.SchemaEmbeddingsRequest
 import io.peerislands.model.EmbeddingsResponse
+import io.peerislands.model.ExampleEmbeddingsRequest
 import org.bson.Document
 
 suspend fun callGenAIPredict(prompt: String): HttpResponse {
@@ -51,13 +51,14 @@ suspend fun getTextEmbeddings(text: String): EmbeddingsResponse {
     return GSON.fromJson(response, EmbeddingsResponse::class.java)
 }
 
-suspend fun storeEmbeddings(request: String): EmbeddingsResponse {
-    val embeddingsRequest = Gson().fromJson(request, EmbeddingsRequest::class.java)
-
-    val text = "Schema for collection: "
-        .plus(embeddingsRequest.collectionName)
+suspend fun storeSchemaEmbeddings(schemaEmbeddingsRequest: SchemaEmbeddingsRequest): EmbeddingsResponse {
+    val text = "This is the schema for ${schemaEmbeddingsRequest.collectionName} collection: "
         .plus("\n")
-        .plus(embeddingsRequest.schema)
+        .plus(schemaEmbeddingsRequest.schema)
+        .plus("\n")
+        .plus("Keywords: ")
+        .plus("\n")
+        .plus(schemaEmbeddingsRequest.keywords)
 
     //STEP 2: Call GEN AI text-embedding endpoint
     val embeddings = getTextEmbeddings(text)
@@ -66,9 +67,34 @@ suspend fun storeEmbeddings(request: String): EmbeddingsResponse {
     val db = mongoClient.getDatabase("genai")
     val collection = db.getCollection("schema_embeddings")
     val document = Document()
-        .append("collectionName", embeddingsRequest.collectionName)
-        .append("schema", embeddingsRequest.schema)
-        .append("keywords", embeddingsRequest.keywords)
+        .append("collectionName", schemaEmbeddingsRequest.collectionName)
+        .append("schema", schemaEmbeddingsRequest.schema)
+        .append("keywords", schemaEmbeddingsRequest.keywords)
+        .append("embeddings", embeddings.predictions[0].embeddings.values)
+    collection.insertOne(document)
+
+    return embeddings
+}
+
+suspend fun storeExampleEmbeddings(exampleEmbeddingsRequest: ExampleEmbeddingsRequest): EmbeddingsResponse {
+    val exampleText = "This is an example for ${exampleEmbeddingsRequest.operation}: "
+        .plus("\n")
+        .plus(exampleEmbeddingsRequest.example)
+        .plus("\n")
+        .plus("Keywords: ")
+        .plus("\n")
+        .plus(exampleEmbeddingsRequest.keywords)
+
+    //STEP 2: Call GEN AI text-embedding endpoint
+    val embeddings = getTextEmbeddings(exampleText)
+    logger.info { "embeddings: $embeddings" }
+
+    val db = mongoClient.getDatabase("genai")
+    val collection = db.getCollection("example_embeddings")
+    val document = Document()
+        .append("operation", exampleEmbeddingsRequest.operation)
+        .append("example", exampleEmbeddingsRequest.example)
+        .append("keywords", exampleEmbeddingsRequest.keywords)
         .append("embeddings", embeddings.predictions[0].embeddings.values)
     collection.insertOne(document)
 

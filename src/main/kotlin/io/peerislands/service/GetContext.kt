@@ -1,6 +1,9 @@
 package io.peerislands.service
 
+import io.peerislands.logger
 import io.peerislands.model.Context
+import io.peerislands.model.Example
+import io.peerislands.model.Examples
 import io.peerislands.mongoClient
 import org.bson.Document
 
@@ -32,4 +35,36 @@ suspend fun getSchemaForQuestionVS(question: String): Context {
     val context = Context(collectionName, collectionSchema, collectionKeywords)
 
     return context
+}
+
+
+suspend fun getExamplesForQuestionVS(question: String): Examples {
+    //Get the embeddings for the question
+    val questionEmbeddings = getTextEmbeddings(question)
+
+    val db = mongoClient.getDatabase("genai")
+    val collection = db.getCollection("example_embeddings")
+
+    val searchStage =
+        Document("\$search",
+            Document("index", "default")
+                .append("knnBeta",
+                    Document("vector", questionEmbeddings.predictions[0].embeddings.values.toList())
+                        .append("path", "embeddings")
+                        .append("k", 5L)
+                )
+        )
+
+    val pipeline = listOf(searchStage)
+    logger.info { "pipeline: $pipeline" }
+    val results = collection.aggregate(pipeline).toList()
+
+    val examples = results.map {
+        val operation = it["operation"] as String
+        val example = it["example"] as String
+        val exampleKeywords = it["keywords"] as List<String>
+        Example(operation, example, exampleKeywords)
+    }
+
+    return Examples(examples)
 }

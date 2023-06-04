@@ -1,5 +1,6 @@
 package io.peerislands.plugins
 
+import com.google.gson.Gson
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -8,6 +9,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.peerislands.GSON
 import io.peerislands.logger
+import io.peerislands.model.ExampleEmbeddingsRequest
+import io.peerislands.model.SchemaEmbeddingsRequest
 import io.peerislands.model.PredictRequest
 import io.peerislands.service.*
 
@@ -59,16 +62,30 @@ fun Application.configureRouting() {
             val response = getCollectionList()
             call.respondText(response, ContentType.Application.Json)
         }
-        post("/api/v1/create_embedding") {
+        post("/api/v1/create_schema_embedding") {
             //STEP 1: Get text from request
             val request = call.receiveText() //TODO: Can we use call.receive<PredictRequest>() instead?
-            val embeddings = storeEmbeddings(request)
+            val schemaEmbeddingsRequest = Gson().fromJson(request, SchemaEmbeddingsRequest::class.java)
+            val embeddings = storeSchemaEmbeddings(schemaEmbeddingsRequest)
+
+            call.respondText(GSON.toJson(embeddings), ContentType.Application.Json)
+        }
+        post("/api/v1/create_example_embedding") {
+            //STEP 1: Get text from request
+            val request = call.receiveText() //TODO: Can we use call.receive<PredictRequest>() instead?
+            val exampleEmbeddingsRequest = Gson().fromJson(request, ExampleEmbeddingsRequest::class.java)
+            val embeddings = storeExampleEmbeddings(exampleEmbeddingsRequest)
 
             call.respondText(GSON.toJson(embeddings), ContentType.Application.Json)
         }
         post("/api/v1/get_schema_for_question") {
             val question = call.receiveText()
             val schema = getSchemaForQuestionVS(question)
+            call.respondText(GSON.toJson(schema), ContentType.Application.Json)
+        }
+        post("/api/v1/get_examples_for_question") {
+            val question = call.receiveText()
+            val schema = getExamplesForQuestionVS(question)
             call.respondText(GSON.toJson(schema), ContentType.Application.Json)
         }
     }
