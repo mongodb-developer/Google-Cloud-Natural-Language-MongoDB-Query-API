@@ -3,12 +3,14 @@ package io.peerislands.service
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.util.logging.*
 import io.peerislands.*
-import io.peerislands.model.SchemaEmbeddingsRequest
-import io.peerislands.model.EmbeddingsResponse
-import io.peerislands.model.ExampleEmbeddingsRequest
+import io.peerislands.model.request.SchemaEmbeddingsRequest
+import io.peerislands.model.response.EmbeddingsResponse
+import io.peerislands.model.request.ExampleEmbeddingsRequest
 import org.bson.Document
 
+private val logger = KtorSimpleLogger("io.peerislands.service.GenAI")
 suspend fun callGenAIPredict(prompt: String): HttpResponse {
     val token = credentials.refreshAccessToken() //TODO: Is this the right way to get the token?
 
@@ -62,7 +64,7 @@ suspend fun storeSchemaEmbeddings(schemaEmbeddingsRequest: SchemaEmbeddingsReque
 
     //STEP 2: Call GEN AI text-embedding endpoint
     val embeddings = getTextEmbeddings(text)
-    logger.info { "embeddings: $embeddings" }
+    logger.info ( "embeddings: $embeddings" )
 
     val db = mongoClient.getDatabase("genai")
     val collection = db.getCollection("schema_embeddings")
@@ -87,7 +89,7 @@ suspend fun storeExampleEmbeddings(exampleEmbeddingsRequest: ExampleEmbeddingsRe
 
     //STEP 2: Call GEN AI text-embedding endpoint
     val embeddings = getTextEmbeddings(exampleText)
-    logger.info { "embeddings: $embeddings" }
+    logger.info ( "embeddings: $embeddings" )
 
     val db = mongoClient.getDatabase("genai")
     val collection = db.getCollection("example_embeddings")

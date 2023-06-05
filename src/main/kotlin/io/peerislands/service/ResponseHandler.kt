@@ -2,7 +2,7 @@ package io.peerislands.service
 
 import com.google.gson.Gson
 import io.ktor.client.statement.*
-import io.peerislands.model.PredictResponse
+import io.peerislands.model.response.PredictResponse
 
 suspend fun parseResponse(response: HttpResponse): String {
     //Parse response to JSONResponse using GSON

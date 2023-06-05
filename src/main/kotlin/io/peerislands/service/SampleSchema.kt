@@ -1,9 +1,10 @@
 package io.peerislands.service
 
-import io.peerislands.logger
+import io.ktor.util.logging.*
 import io.peerislands.mongoClient
 import org.bson.Document
 
+private val logger = KtorSimpleLogger("io.peerislands.service.SampleSchema")
 fun getSampleSchema(collectionName: String): String {
     val db = mongoClient.getDatabase("genai")
     val collection = db.getCollection("sample_schema")
@@ -11,7 +12,7 @@ fun getSampleSchema(collectionName: String): String {
         .append("collection", collectionName)
 
     val schema = collection.find(filter).first()
-    logger.info { "Schema: $schema" }
+    logger.info ( "Schema: $schema" )
 
     val gson = com.google.gson.GsonBuilder()
         .setPrettyPrinting()
@@ -31,7 +32,7 @@ fun getCollectionList(): String {
         .find()
         .projection(projection)
         .toList()
-    logger.info { "Collection List: $collectionList" }
+    logger.info ( "Collection List: $collectionList" )
 
     val gson = com.google.gson.GsonBuilder()
         .setPrettyPrinting()

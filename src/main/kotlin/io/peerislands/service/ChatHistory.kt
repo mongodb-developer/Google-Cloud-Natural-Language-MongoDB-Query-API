@@ -1,10 +1,11 @@
 package io.peerislands.service
 
-import io.peerislands.logger
-import io.peerislands.model.PredictRequest
+import io.ktor.util.logging.*
+import io.peerislands.model.request.PredictRequest
 import io.peerislands.mongoClient
 import org.bson.Document
 
+private val logger = KtorSimpleLogger("io.peerislands.service.ChatHistory")
 fun storeInMongoDB(jsonRequest: PredictRequest,
                    prompt: String,
                    parsedCode: String,
@@ -23,7 +24,7 @@ fun storeInMongoDB(jsonRequest: PredictRequest,
         .append("validSyntax", validSyntax)
         .append("validSemantics", validSemantics)
     val result = collection.insertOne(document)
-    logger.info { "Inserted document: $result" }
+    logger.info ( "Inserted document: $result" )
 }
 
 fun getHistory(limit: Int): String {

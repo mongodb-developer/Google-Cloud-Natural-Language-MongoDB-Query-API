@@ -1,6 +1,7 @@
+@file:Suppress("UNCHECKED_CAST")
 package io.peerislands.service
 
-import io.peerislands.logger
+import io.ktor.util.logging.*
 import io.peerislands.model.Context
 import io.peerislands.model.Example
 import io.peerislands.model.Examples
@@ -8,6 +9,7 @@ import io.peerislands.mongoClient
 import org.bson.Document
 
 
+private val logger = KtorSimpleLogger("io.peerislands.service.GetContext")
 suspend fun getSchemaForQuestionVS(question: String): Context {
     //Get the embeddings for the question
     val questionEmbeddings = getTextEmbeddings(question)
@@ -56,7 +58,7 @@ suspend fun getExamplesForQuestionVS(question: String): Examples {
         )
 
     val pipeline = listOf(searchStage)
-    logger.info { "pipeline: $pipeline" }
+    logger.info ( "pipeline: $pipeline" )
     val results = collection.aggregate(pipeline).toList()
 
     val examples = results.map {

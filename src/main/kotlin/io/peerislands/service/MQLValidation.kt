@@ -7,13 +7,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.mongodb.client.MongoClients
+import io.ktor.util.logging.*
 import io.peerislands.data.companiesSchema
 import io.peerislands.data.gradesSchema
 import io.peerislands.data.inspectionSchema
-import io.peerislands.logger
+import io.peerislands.mongoClient
 import org.bson.Document
 import java.util.Scanner
 
+private val logger = KtorSimpleLogger("io.peerislands.service.ChatHistory")
 data class ValidationResponse(
     val validSyntax: Boolean,
     val validSemantics: Boolean
@@ -37,7 +39,7 @@ fun validateResponse(answer: String): ValidationResponse {
     try {
         validateSyntax(answer)
     } catch (e: Exception) {
-        logger.error { "Error validating response: ${e.message}" }
+        logger.error ( "Error validating response: ${e.message}" )
         false
     }
 
@@ -45,7 +47,7 @@ fun validateResponse(answer: String): ValidationResponse {
     try {
         validateSemantics(answer)
     } catch (e: Exception) {
-        logger.error { "Error validating response: ${e.message}" }
+        logger.error ( "Error validating response: ${e.message}" )
         false
     }
 
@@ -63,8 +65,7 @@ fun validateSemantics(answer: String): Boolean {
 }
 
 fun validateSyntax(answer: String): Boolean {
-    val client = MongoClients.create()
-    val db = client.getDatabase("test")
+    val db = mongoClient.getDatabase("test")
     val collection = db.getCollection("test")
     return try {
         val extractedQuery = extractQuery(answer)

@@ -1,4 +1,4 @@
-package io.peerislands.model
+package io.peerislands.model.request
 
 data class ExampleEmbeddingsRequest (
     val operation: String,

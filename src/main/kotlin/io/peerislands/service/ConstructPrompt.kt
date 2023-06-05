@@ -1,9 +1,12 @@
 package io.peerislands.service
 
+import io.ktor.util.logging.*
 import io.peerislands.data.*
-import io.peerislands.logger
-import io.peerislands.model.PredictRequest
+import io.peerislands.model.request.PredictRequest
+import io.peerislands.mongoClient
+import org.bson.Document
 
+private val logger = KtorSimpleLogger("io.peerislands.service.ConstructPrompt")
 suspend fun constructPayload(jsonRequest: PredictRequest): String {
     val question = jsonRequest.instances[0].prefix
     val userProvidedContext = jsonRequest.instances[0].context
@@ -11,7 +14,7 @@ suspend fun constructPayload(jsonRequest: PredictRequest): String {
 
     val prompt = constructPrompt(question, userProvidedContext, userProvidedExamples)
 
-    logger.info{ "Prompt: $prompt" }
+    logger.info( "Prompt: $prompt" )
 
     val payload = """
             {
@@ -36,15 +39,10 @@ suspend fun constructPayload(jsonRequest: PredictRequest): String {
 private suspend fun constructPrompt(
     question: String,
     userProvidedContext: String, userProvidedExamples: String): String {
-    val schemaContext = getSchemaForQuestionVS(question)
-    val collectionName = schemaContext.collectionName.ifEmpty { getCollectionName(question) }
-    val collectionSchema = schemaContext.collectionSchema.ifEmpty { getSchema(collectionName) }
+    val collectionSchema = getSchema(question)
 
     val questionType = evaluateQuestionType(question)
     val examplesFromQuestionType = getExamples(questionType)
-
-    val examples = getExamplesForQuestionVS(question)
-    val exampleFromVS = examples.examples.map { it.example }
 
     //For schema include userProvidedContext if it is not empty. Otherwise, use the schema from VS
     return promptTemplate
@@ -57,21 +55,29 @@ private suspend fun constructPrompt(
             "{{examples}}",
             examplesFromQuestionType
                 .plus("\n")
-                .plus(exampleFromVS)
-                .plus("\n")
                 .plus(userProvidedExamples)
         )
 }
 
-fun getCollectionName(question: String): String {
-    //TODO:          - Infer collection from question - can we use Vector Search?
-    return when {
-        inspectionKeywords.any { question.contains(it, ignoreCase = true) } -> "inspections"
-        gradesKeywords.any { question.contains(it, ignoreCase = true) } -> "grades"
-        companiesKeywords.any { question.contains(it, ignoreCase = true) } -> "companies"
-        moviesKeywords.any { question.contains(it, ignoreCase = true) } -> "movies"
-        else -> "movies"
+fun getSchema(question: String): String {
+    val schemaDB = mongoClient.getDatabase("genai")
+    val schemaCollection = schemaDB.getCollection("schema_embeddings")
+    val projection = Document("collectionName", 1)
+        .append("schema", 1)
+        .append("keywords", 1)
+        .append("_id", 0)
+    val results = schemaCollection.find().projection(projection).toList()
+
+    results.forEach {
+        val collectionName = it["collectionName"] as String
+        val keywords = it["keywords"] as List<String>
+        val schema = it["schema"] as String
+        if (keywords.any { question.contains(it, ignoreCase = true) }) {
+            logger.info("Found schema for $collectionName")
+            return schema
+        }
     }
+    return ""
 }
 
 fun evaluateQuestionType(question: String): String {
@@ -81,31 +87,26 @@ fun evaluateQuestionType(question: String): String {
         insertKeywords.any { question.contains(it, ignoreCase = true) } -> "insert"
         deleteKeywords.any { question.contains(it, ignoreCase = true) } -> "delete"
         findKeywords.any { question.contains(it, ignoreCase = true) } -> "find"
+        aggregateKeywords.any { question.contains(it, ignoreCase = true) } -> "aggregate"
         else -> "find"
     }
     return questionType
 }
 
-private fun getSchema(collection: String): String {
-    //TODO:          - Get collection schema - can we use Vector Search?
-    return when (collection) {
-        "inspections" -> inspectionSchema
-        "grades" -> gradesSchema
-        "companies" -> companiesSchema
-        "movies" -> moviesSchema
-        else -> ""
-    }
-}
 
-private fun getExamples(questionType: String): String {
-    //TODO:          - Get Relevant examples - can we use Vector Search?
-    return when (questionType) {
-        "update" -> updateExamples
-        "insert" -> insertExamples
-        "delete" -> deleteExamples
-        "find" -> findExamples
-        else -> ""
-    }
+fun getExamples(questionType: String): String {
+
+    val examplesDB = mongoClient.getDatabase("genai")
+    val examplesCollection = examplesDB.getCollection("example_embeddings")
+    val projection = Document("operation", 1)
+        .append("example", 1)
+        .append("keywords", 1)
+        .append("_id", 0)
+    val filter = Document("keywords", questionType)
+    val results = examplesCollection.find(filter).projection(projection).toList()
+
+    val examples = results.map { it["example"] as String }
+    return examples.joinToString("\n")
 }
 
 //TODO: Improve the prompt template

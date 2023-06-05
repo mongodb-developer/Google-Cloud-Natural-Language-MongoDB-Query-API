@@ -7,14 +7,15 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.logging.*
 import io.peerislands.GSON
-import io.peerislands.logger
-import io.peerislands.model.ExampleEmbeddingsRequest
-import io.peerislands.model.SchemaEmbeddingsRequest
-import io.peerislands.model.PredictRequest
+import io.peerislands.model.request.ExampleEmbeddingsRequest
+import io.peerislands.model.request.SchemaEmbeddingsRequest
+import io.peerislands.model.request.PredictRequest
 import io.peerislands.service.*
 
 
+private val logger = KtorSimpleLogger("io.peerislands.plugins.Routing")
 fun Application.configureRouting() {
     routing {
         post("/api/v1/predict") {
@@ -29,16 +30,16 @@ fun Application.configureRouting() {
 
             //STEP 4: Parse response and get answer / code
             val parsedCode: String = parseResponse(generatedCode)
-            logger.info { "parsedCode: $parsedCode" }
+            logger.info ( "parsedCode: $parsedCode" )
 
             //STEP 5: Run validations
             val (validSyntax, validSemantics) = validateResponse(parsedCode)
 
             //STEP 6: Regenerate code if any errors
             if (!validSyntax || !validSemantics) {
-                logger.info { "Invalid response. Regenerating code..." }
+                logger.info ( "Invalid response. Regenerating code..." )
             } else {
-                logger.info { "Valid response. Proceeding..." }
+                logger.info ( "Valid response. Proceeding..." )
             }
 
             //STEP 7: Store question, prompt, and response in MongoDB
@@ -85,8 +86,10 @@ fun Application.configureRouting() {
         }
         post("/api/v1/get_examples_for_question") {
             val question = call.receiveText()
-            val schema = getExamplesForQuestionVS(question)
-            call.respondText(GSON.toJson(schema), ContentType.Application.Json)
+//            val schema = getExamplesForQuestionVS(question)
+            val questionType = evaluateQuestionType(question)
+            val examplesFromQuestionType = getExamples(questionType)
+            call.respondText(GSON.toJson(examplesFromQuestionType), ContentType.Application.Json)
         }
     }
 }

@@ -1,4 +1,4 @@
-package io.peerislands.model
+package io.peerislands.model.request
 
 data class PredictRequest(
     val instances: List<Instance>,
