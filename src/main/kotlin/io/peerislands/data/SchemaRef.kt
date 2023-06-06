@@ -123,3 +123,18 @@ val moviesSchema = """
         lastUpdated: Date
     num_mflix_comments: Int
 """.trimIndent()
+
+val theatersSchema = """
+ _id: ObjectId
+ theaterId: Int 
+ location: Object 
+ address: Object 
+ street: String 
+ city: String 
+ state: String 
+ zipcode: String 
+ geo: Object 
+ type: Point 
+ coordinates: Array
+""".trimIndent()
+

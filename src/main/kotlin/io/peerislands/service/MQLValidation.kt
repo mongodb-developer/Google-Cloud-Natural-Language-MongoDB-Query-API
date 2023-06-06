@@ -8,9 +8,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.mongodb.client.MongoClients
 import io.ktor.util.logging.*
-import io.peerislands.data.companiesSchema
-import io.peerislands.data.gradesSchema
-import io.peerislands.data.inspectionSchema
+import io.peerislands.data.*
 import io.peerislands.mongoClient
 import org.bson.Document
 import java.util.Scanner
@@ -134,7 +132,6 @@ fun getFieldsFromSchema(schema: String): List<String> {
                 intendCount++
                 parentList.add(content[0].trim())
             }
-
         }
     }
     return fieldList
@@ -184,7 +181,7 @@ fun String.toMongoDBFieldName(): String {
 }
 
 fun validateFindQueryFields(query: Map<String, Any>): Boolean {
-    val fieldList = getFieldsFromSchema(inspectionSchema, gradesSchema, companiesSchema)
+    val fieldList = getFieldsFromSchema(inspectionSchema, gradesSchema, companiesSchema, theatersSchema, moviesSchema)
     return extractFieldsFromQuery(query).all { fieldList.contains(it)  }
 }
 

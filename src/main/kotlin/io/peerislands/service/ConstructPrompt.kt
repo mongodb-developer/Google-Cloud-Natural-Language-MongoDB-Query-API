@@ -95,7 +95,6 @@ fun evaluateQuestionType(question: String): String {
 
 
 fun getExamples(questionType: String): String {
-
     val examplesDB = mongoClient.getDatabase("genai")
     val examplesCollection = examplesDB.getCollection("example_embeddings")
     val projection = Document("operation", 1)
@@ -105,14 +104,25 @@ fun getExamples(questionType: String): String {
     val filter = Document("keywords", questionType)
     val results = examplesCollection.find(filter).projection(projection).toList()
 
-    val examples = results.map { it["example"] as String }
-    return examples.joinToString("\n")
+    var examples = ""
+    results.forEach {
+        val index = results.indexOf(it)
+        val exampleNum = 1 + index
+        val operation = it["operation"] as String
+        val example = it["example"] as String
+        examples = examples.plus("--Example ${exampleNum}:--\n")
+            .plus("--Example of ${operation}: --")
+            .plus("\n")
+            .plus(example)
+            .plus("\n")
+    }
+    return examples
 }
 
 //TODO: Improve the prompt template
 val promptTemplate = """
 Generate the simplest MongoDB query possible. 
-Output should be a valid MongoDB query. 
+Output should be a valid MongoDB query.
 We should be able to run the query in mongo shell.
 ------------------------------------------------------------
 Question: {{question}}
