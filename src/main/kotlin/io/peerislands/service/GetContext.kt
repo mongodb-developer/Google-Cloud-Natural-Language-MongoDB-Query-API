@@ -2,10 +2,10 @@
 package io.peerislands.service
 
 import io.ktor.util.logging.*
+import io.peerislands.genAIDatabase
 import io.peerislands.model.Context
 import io.peerislands.model.Example
 import io.peerislands.model.Examples
-import io.peerislands.mongoClient
 import org.bson.Document
 
 
@@ -14,8 +14,7 @@ suspend fun getSchemaForQuestionVS(question: String): Context {
     //Get the embeddings for the question
     val questionEmbeddings = getTextEmbeddings(question)
 
-    val db = mongoClient.getDatabase("genai")
-    val collection = db.getCollection("schema_embeddings")
+    val collection = genAIDatabase.getCollection("schema_embeddings")
 
     val searchStage =
         Document("\$search",
@@ -44,8 +43,7 @@ suspend fun getExamplesForQuestionVS(question: String): Examples {
     //Get the embeddings for the question
     val questionEmbeddings = getTextEmbeddings(question)
 
-    val db = mongoClient.getDatabase("genai")
-    val collection = db.getCollection("example_embeddings")
+    val collection = genAIDatabase.getCollection("example_embeddings")
 
     val searchStage =
         Document("\$search",

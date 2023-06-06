@@ -66,8 +66,7 @@ suspend fun storeSchemaEmbeddings(schemaEmbeddingsRequest: SchemaEmbeddingsReque
     val embeddings = getTextEmbeddings(text)
     logger.info ( "embeddings: $embeddings" )
 
-    val db = mongoClient.getDatabase("genai")
-    val collection = db.getCollection("schema_embeddings")
+    val collection = genAIDatabase.getCollection("schema_embeddings")
     val document = Document()
         .append("collectionName", schemaEmbeddingsRequest.collectionName)
         .append("schema", schemaEmbeddingsRequest.schema)
@@ -91,8 +90,7 @@ suspend fun storeExampleEmbeddings(exampleEmbeddingsRequest: ExampleEmbeddingsRe
     val embeddings = getTextEmbeddings(exampleText)
     logger.info ( "embeddings: $embeddings" )
 
-    val db = mongoClient.getDatabase("genai")
-    val collection = db.getCollection("example_embeddings")
+    val collection = genAIDatabase.getCollection("example_embeddings")
     val document = Document()
         .append("operation", exampleEmbeddingsRequest.operation)
         .append("example", exampleEmbeddingsRequest.example)

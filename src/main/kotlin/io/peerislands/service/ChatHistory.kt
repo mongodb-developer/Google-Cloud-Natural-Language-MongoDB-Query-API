@@ -1,9 +1,9 @@
 package io.peerislands.service
 
 import io.ktor.util.logging.*
+import io.peerislands.genAIDatabase
 import io.peerislands.model.request.PredictRequest
 import io.peerislands.model.response.PredictResponse
-import io.peerislands.mongoClient
 import org.bson.Document
 
 private val logger = KtorSimpleLogger("io.peerislands.service.ChatHistory")
@@ -13,8 +13,7 @@ fun storeInMongoDB(jsonRequest: PredictRequest,
                    parsedCode: String,
                    validSyntax: Boolean,
                    validSemantics: Boolean) {
-    val db = mongoClient.getDatabase("genai")
-    val collection = db.getCollection("history")
+    val collection = genAIDatabase.getCollection("history")
     val document = Document()
         .append("question", jsonRequest.instances[0].prefix)
         .append("context", jsonRequest.instances[0].context)
@@ -31,8 +30,7 @@ fun storeInMongoDB(jsonRequest: PredictRequest,
 }
 
 fun getHistory(limit: Int): String {
-    val db = mongoClient.getDatabase("genai")
-    val collection = db.getCollection("history")
+    val collection = genAIDatabase.getCollection("history")
 
     val documents = collection.find()
         .sort(Document("_id", -1))

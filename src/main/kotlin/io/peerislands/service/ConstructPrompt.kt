@@ -2,8 +2,8 @@ package io.peerislands.service
 
 import io.ktor.util.logging.*
 import io.peerislands.data.*
+import io.peerislands.genAIDatabase
 import io.peerislands.model.request.PredictRequest
-import io.peerislands.mongoClient
 import org.bson.Document
 
 private val logger = KtorSimpleLogger("io.peerislands.service.ConstructPrompt")
@@ -36,7 +36,7 @@ suspend fun constructPayload(jsonRequest: PredictRequest): String {
     return payload.toString()
 }
 
-private suspend fun constructPrompt(
+private fun constructPrompt(
     question: String,
     userProvidedContext: String, userProvidedExamples: String): String {
     val collectionSchema = getSchema(question)
@@ -60,8 +60,7 @@ private suspend fun constructPrompt(
 }
 
 fun getSchema(question: String): String {
-    val schemaDB = mongoClient.getDatabase("genai")
-    val schemaCollection = schemaDB.getCollection("schema_embeddings")
+    val schemaCollection = genAIDatabase.getCollection("schema_embeddings")
     val projection = Document("collectionName", 1)
         .append("schema", 1)
         .append("keywords", 1)
@@ -95,8 +94,7 @@ fun evaluateQuestionType(question: String): String {
 
 
 fun getExamples(questionType: String): String {
-    val examplesDB = mongoClient.getDatabase("genai")
-    val examplesCollection = examplesDB.getCollection("example_embeddings")
+    val examplesCollection = genAIDatabase.getCollection("example_embeddings")
     val projection = Document("operation", 1)
         .append("example", 1)
         .append("keywords", 1)

@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
+import com.mongodb.client.MongoDatabase
 import io.ktor.client.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.plugins.logging.Logger
@@ -66,6 +67,7 @@ val MONGODB_URI = try {
     throw e
 }
 val mongoClient = createMongoClient()
+val genAIDatabase: MongoDatabase = mongoClient.getDatabase("genai")
 
 fun createMongoClient(): MongoClient {
     return MongoClients.create(MONGODB_URI)
