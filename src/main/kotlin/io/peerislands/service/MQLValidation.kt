@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.mongodb.client.MongoClients
+import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Projections
 import io.ktor.util.logging.*
 import io.peerislands.data.*
 import io.peerislands.mongoClient
@@ -32,32 +34,33 @@ val OBJECT_MAPPER: ObjectMapper = ObjectMapper().registerModule(
     .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
     .configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
 
-fun validateResponse(answer: String): ValidationResponse {
+fun validateResponse(answer: String, userContext: String): ValidationResponse {
     val validSyntax: Boolean =
-    try {
-        validateSyntax(answer)
-    } catch (e: Exception) {
-        logger.error ( "Error validating response: ${e.message}" )
-        false
-    }
+        try {
+            validateSyntax(answer)
+        } catch (e: Exception) {
+            logger.error ( "Error validating response: ${e.message}" )
+            false
+        }
 
     val validSemantics: Boolean =
-    try {
-        validateSemantics(answer)
-    } catch (e: Exception) {
-        logger.error ( "Error validating response: ${e.message}" )
-        false
-    }
+        try {
+            validateSemantics(answer, userContext)
+        } catch (e: Exception) {
+            logger.error ( "Error validating response: ${e.message}" )
+            false
+        }
 
     return ValidationResponse(validSyntax, validSemantics)
 }
 
-fun validateSemantics(answer: String): Boolean {
+fun validateSemantics(answer: String, userContext: String): Boolean {
     val extractedQuery = extractQuery(answer)
+    val schema = userContext.ifEmpty { getSchemaFromAnswer(answer) }
     return when (getOperation(answer)) {
         "insertOne", "insertMany" -> true // No validation for now
-        "find" -> validateFindQueryFields(extractedQuery[0] as Map<String, Any>)
-        "aggregate" -> validateAggregateQueryFields(extractedQuery[0] as List<Map<String, Any>>)
+        "find" -> validateFindQueryFields(extractedQuery[0] as Map<String, Any>, schema)
+        "aggregate" -> validateAggregateQueryFields(extractedQuery[0] as List<Map<String, Any>>, schema)
         else -> true // Need to be false. Temporarily returning true to bypass other operations
     }
 }
@@ -88,7 +91,8 @@ fun validateSyntax(answer: String): Boolean {
 }
 
 fun extractQuery(answer: String): List<Any> {
-    val funArgs = answer.convertToBsonSyntax().substring(answer.indexOf(OPEN_PAREN) + 1, answer.indexOf(CLOSE_PAREN))
+    val parsedAnswer = answer.convertToBsonSyntax()
+    val funArgs = parsedAnswer.substring(parsedAnswer.indexOf(OPEN_PAREN) + 1, parsedAnswer.indexOf(CLOSE_PAREN))
     return OBJECT_MAPPER.readValue("[$funArgs]", object : TypeReference<List<Any>>() {})
 }
 
@@ -128,7 +132,7 @@ fun getFieldsFromSchema(schema: String): List<String> {
                 fieldList.add(content[0].trim())
             }
 
-            if((content[1].trim() == "Object") or (content[1].trim() == "Array")){
+            if((content[1].trim().lowercase().contains("object") ) or (content[1].trim().lowercase().contains("array") )){
                 intendCount++
                 parentList.add(content[0].trim())
             }
@@ -151,10 +155,11 @@ fun String.countPrefixIntend(intendSpaceCount: Int = 4): Int {
 
 fun extractFieldsFromQuery(mQuery: Map<String, Any>): List<String> {
     val resultList = mutableSetOf<String>()
+    val excludeOperationList = listOf("\$elemMatch", "\$group", "\$project", "\$sort", "\$dateToString")
     mQuery.entries.forEach {
             entry ->
         if(entry.value is Map<*, *>) {
-            if(entry.key != "\$elemMatch") // Excluding validation on elemMatch
+            if(!excludeOperationList.contains(entry.key)) // Excluding validation on elemMatch and aggregation operations except match
                 resultList.addAll(extractFieldsFromQuery(entry.value as Map<String, Any>))
         } else if(entry.value is List<*>) {
             (entry.value as List<*>).forEach {
@@ -180,8 +185,8 @@ fun String.toMongoDBFieldName(): String {
         .replace("\$","").replace("..",".")
 }
 
-fun validateFindQueryFields(query: Map<String, Any>): Boolean {
-    val fieldList = getFieldsFromSchema(inspectionSchema, gradesSchema, companiesSchema, theatersSchema, moviesSchema)
+fun validateFindQueryFields(query: Map<String, Any>, schema: String): Boolean {
+    val fieldList = getFieldsFromSchema(schema)
     return extractFieldsFromQuery(query).all { fieldList.contains(it)  }
 }
 
@@ -196,8 +201,8 @@ fun String.convertObjectIdSyntax(): String {
     return resultQuery
 }
 
-fun validateAggregateQueryFields(query: List<Map<String, Any>>): Boolean {
-    val fieldList = getFieldsFromSchema(inspectionSchema, gradesSchema, companiesSchema)
+fun validateAggregateQueryFields(query: List<Map<String, Any>>, schema: String): Boolean {
+    val fieldList = getFieldsFromSchema(schema)
     val queryFieldList = mutableListOf<String>()
     query.forEach{
         queryFieldList.addAll(extractFieldsFromQuery(it))
@@ -219,5 +224,14 @@ fun String.convertDateSyntax(): String {
 }
 
 fun String.convertToBsonSyntax(): String {
-    return this.convertObjectIdSyntax().convertDateSyntax()
+    return this.convertObjectIdSyntax().convertDateSyntax().replace("new Date()", "\"\"")
+}
+
+fun getSchemaFromAnswer(answer: String): String {
+    // Assuming collection does not have any periods(.)
+    val collection = answer.split(".")[1]
+    val schemaDocument = mongoClient.getDatabase("genai")
+        .getCollection("schema_embeddings").find(Filters.eq("collectionName", collection))
+        .projection(Projections.include("schema")).first()
+    return schemaDocument.getString("schema")
 }

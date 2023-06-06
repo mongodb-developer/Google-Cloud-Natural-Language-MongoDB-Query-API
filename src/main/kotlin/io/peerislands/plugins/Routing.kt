@@ -35,7 +35,7 @@ fun Application.configureRouting() {
             logger.info ( "parsedCode: $parsedCode" )
 
             //STEP 5: Run validations
-            val (validSyntax, validSemantics) = validateResponse(parsedCode)
+            val (validSyntax, validSemantics) = validateResponse(parsedCode, jsonRequest.instances[0].context)
 
             //STEP 6: Regenerate code if any errors
             if (!validSyntax || !validSemantics) {
