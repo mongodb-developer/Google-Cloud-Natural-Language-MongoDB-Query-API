@@ -38,7 +38,7 @@ val credentials: GoogleCredentials = GoogleCredentials.getApplicationDefault()
 val client = HttpClient() {
     install(Logging) {
         logger = Logger.DEFAULT
-        level = LogLevel.HEADERS
+        level = LogLevel.ALL
     }
 }
 

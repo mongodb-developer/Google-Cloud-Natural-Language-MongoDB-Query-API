@@ -121,16 +121,24 @@ fun getExamples(questionType: String): String {
 
 //TODO: Improve the prompt template
 val promptTemplate = """
-Generate the simplest MongoDB query possible. 
+**Instructions: 
+Please convert the following natural language query into a MongoDB Query. 
+Use the provided example for guidance.
+Generate the simplest MongoDB query possible.
+Pay attention to the schema provided. 
+Field names should match the schema.
+When referring to fields in a nested object, use dot notation. for example: 'address.city'
+When including a field from nested object using dot notation, include the parent object. And enclose them in quotes. For example: { 'address.city' : 'New York' }
+When referring to fields in an array of nested objects, use the ${'$'}elemMatch operator. For example: { 'address': ${'$'}elemMatch: { 'city': 'New York' } }
 Output should be a valid MongoDB query.
-We should be able to run the query in mongo shell.
+We should be able to run the query in mongo shell.**
 ------------------------------------------------------------
 Question: {{question}}
 ------------------------------------------------------------
-Use the schema model below to construct the query.
+Schema model:
 {{schema}}
 ------------------------------------------------------------
-Use the examples below to construct the query.
+Example MongoDB Queries for reference:
 {{examples}}
 ------------------------------------------------------------
 """.trimIndent()

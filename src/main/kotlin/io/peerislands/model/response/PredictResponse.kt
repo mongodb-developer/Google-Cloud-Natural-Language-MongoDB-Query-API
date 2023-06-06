@@ -1,11 +1,16 @@
 package io.peerislands.model.response
 
 import com.google.gson.annotations.SerializedName
+import io.peerislands.GSON
 
 data class PredictResponse(
     @SerializedName("predictions")
     val predictions: List<Prediction>
-)
+) {
+    override fun toString(): String {
+        return GSON.toJson(this)
+    }
+}
 
 data class Prediction(
     @SerializedName("content")

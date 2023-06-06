@@ -12,6 +12,7 @@ import io.peerislands.GSON
 import io.peerislands.model.request.ExampleEmbeddingsRequest
 import io.peerislands.model.request.SchemaEmbeddingsRequest
 import io.peerislands.model.request.PredictRequest
+import io.peerislands.model.response.PredictResponse
 import io.peerislands.service.*
 
 
@@ -26,10 +27,11 @@ fun Application.configureRouting() {
             val prompt = constructPayload(jsonRequest)
 
             //STEP 3: Call GEN AI code-bison endpoint
-            val generatedCode: HttpResponse = callGenAIPredict(prompt)
+            val genAIResponse: HttpResponse = callGenAIPredict(prompt)
+            val predictResponse = Gson().fromJson(genAIResponse.bodyAsText(), PredictResponse::class.java)
 
             //STEP 4: Parse response and get answer / code
-            val parsedCode: String = parseResponse(generatedCode)
+            val parsedCode: String = parseResponse(predictResponse)
             logger.info ( "parsedCode: $parsedCode" )
 
             //STEP 5: Run validations
@@ -43,7 +45,7 @@ fun Application.configureRouting() {
             }
 
             //STEP 7: Store question, prompt, and response in MongoDB
-            storeInMongoDB(jsonRequest, prompt, parsedCode, validSyntax, validSemantics)
+            storeInMongoDB(jsonRequest, prompt, predictResponse, parsedCode, validSyntax, validSemantics)
 
             //STEP 8: Return response
             val response = buildResponse(parsedCode, prompt, validSyntax, validSemantics)

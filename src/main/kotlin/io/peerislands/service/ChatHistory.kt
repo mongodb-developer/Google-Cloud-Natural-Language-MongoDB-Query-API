@@ -2,12 +2,14 @@ package io.peerislands.service
 
 import io.ktor.util.logging.*
 import io.peerislands.model.request.PredictRequest
+import io.peerislands.model.response.PredictResponse
 import io.peerislands.mongoClient
 import org.bson.Document
 
 private val logger = KtorSimpleLogger("io.peerislands.service.ChatHistory")
 fun storeInMongoDB(jsonRequest: PredictRequest,
                    prompt: String,
+                   predictResponse: PredictResponse,
                    parsedCode: String,
                    validSyntax: Boolean,
                    validSemantics: Boolean) {
@@ -20,6 +22,7 @@ fun storeInMongoDB(jsonRequest: PredictRequest,
         .append("temperature", jsonRequest.parameters.temperature)
         .append("maxOutputTokens", jsonRequest.parameters.maxOutputTokens)
         .append("prompt", prompt)
+        .append("response", predictResponse.toString())
         .append("code", parsedCode)
         .append("validSyntax", validSyntax)
         .append("validSemantics", validSemantics)
