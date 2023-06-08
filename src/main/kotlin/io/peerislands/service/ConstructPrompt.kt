@@ -123,6 +123,8 @@ fun getExamples(questionType: String): String {
 val promptTemplate = """
 **Instructions: 
 Please convert the following natural language query into a MongoDB Query. 
+Output should be a valid MongoDB query.
+We should be able to run the query in mongo shell.
 Use the provided example for guidance.
 Generate the simplest MongoDB query possible.
 Pay attention to the schema provided. 
@@ -130,10 +132,10 @@ Field names should match the schema.
 When referring to fields in a nested object, use dot notation. for example: 'address.city'
 When including a field from nested object using dot notation, include the parent object. And enclose them in quotes. For example: { 'address.city' : 'New York' }
 When referring to fields in an array of nested objects, use the ${'$'}elemMatch operator. For example: { 'address': ${'$'}elemMatch: { 'city': 'New York' } }
-Output should be a valid MongoDB query.
-We should be able to run the query in mongo shell.**
+**
 ------------------------------------------------------------
 Question: {{question}}
+Use ${'$'}expr operator when comparing two fields in same document. Use ${'$'} when referring to fields.
 ------------------------------------------------------------
 Schema model:
 {{schema}}

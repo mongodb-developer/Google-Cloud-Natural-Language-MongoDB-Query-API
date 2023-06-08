@@ -1,7 +1,5 @@
 package io.peerislands.service
 
-import io.peerislands.mongoClient
-import org.bson.BsonDocument
 import java.util.*
 
 private const val connString = "mongodb://localhost:27017"
