@@ -12,6 +12,7 @@ import io.peerislands.GSON
 import io.peerislands.model.request.ExampleEmbeddingsRequest
 import io.peerislands.model.request.SchemaEmbeddingsRequest
 import io.peerislands.model.request.PredictRequest
+import io.peerislands.model.request.RunMongoCommandRequest
 import io.peerislands.model.response.PredictResponse
 import io.peerislands.service.*
 
@@ -92,6 +93,13 @@ fun Application.configureRouting() {
             val questionType = evaluateQuestionType(question)
             val examplesFromQuestionType = getExamples(questionType)
             call.respondText(GSON.toJson(examplesFromQuestionType), ContentType.Application.Json)
+        }
+
+        post("/api/v1/run_mql") {
+            val request = call.receiveText()
+            val mongoCommandRequest = GSON.fromJson(request, RunMongoCommandRequest::class.java)
+            val response = executeMongoCommand(mongoCommandRequest.command, mongoCommandRequest.db)
+            call.respondText(response, ContentType.Application.Any)
         }
     }
 }

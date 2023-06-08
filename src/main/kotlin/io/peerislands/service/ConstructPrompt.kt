@@ -7,6 +7,7 @@ import io.peerislands.model.request.PredictRequest
 import org.bson.Document
 
 private val logger = KtorSimpleLogger("io.peerislands.service.ConstructPrompt")
+private const val USE_SCHEMA = false
 suspend fun constructPayload(jsonRequest: PredictRequest): String {
     val question = jsonRequest.instances[0].prefix
     val userProvidedContext = jsonRequest.instances[0].context
@@ -60,9 +61,10 @@ private fun constructPrompt(
 }
 
 fun getSchema(question: String): String {
+    val schemaField = if (USE_SCHEMA) "schema" else "example"
     val schemaCollection = genAIDatabase.getCollection("schema_embeddings")
     val projection = Document("collectionName", 1)
-        .append("schema", 1)
+        .append(schemaField, 1)
         .append("keywords", 1)
         .append("_id", 0)
     val results = schemaCollection.find().projection(projection).toList()
@@ -70,7 +72,7 @@ fun getSchema(question: String): String {
     results.forEach {
         val collectionName = it["collectionName"] as String
         val keywords = it["keywords"] as List<String>
-        val schema = it["schema"] as String
+        val schema = it[schemaField] as String
         if (keywords.any { question.contains(it, ignoreCase = true) }) {
             logger.info("Found schema for $collectionName")
             return schema

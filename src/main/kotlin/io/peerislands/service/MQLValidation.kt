@@ -16,6 +16,7 @@ import org.bson.Document
 import java.util.Scanner
 
 private val logger = KtorSimpleLogger("io.peerislands.service.ChatHistory")
+private const val USE_SCHEMA = false
 data class ValidationResponse(
     val validSyntax: Boolean,
     val validSemantics: Boolean
@@ -56,11 +57,10 @@ fun validateResponse(answer: String, userContext: String): ValidationResponse {
 
 fun validateSemantics(answer: String, userContext: String): Boolean {
     val extractedQuery = extractQuery(answer)
-    val schema = userContext.ifEmpty { getSchemaFromAnswer(answer) }
     return when (getOperation(answer)) {
         "insertOne", "insertMany" -> true // No validation for now
-        "find" -> validateFindQueryFields(extractedQuery[0] as Map<String, Any>, schema)
-        "aggregate" -> validateAggregateQueryFields(extractedQuery[0] as List<Map<String, Any>>, schema)
+        "find" -> validateFindQueryFields(extractedQuery[0] as Map<String, Any>, answer, userContext)
+        "aggregate" -> validateAggregateQueryFields(extractedQuery[0] as List<Map<String, Any>>, answer, userContext)
         else -> true // Need to be false. Temporarily returning true to bypass other operations
     }
 }
@@ -185,8 +185,9 @@ fun String.toMongoDBFieldName(): String {
         .replace("\$","").replace("..",".")
 }
 
-fun validateFindQueryFields(query: Map<String, Any>, schema: String): Boolean {
-    val fieldList = getFieldsFromSchema(schema)
+fun validateFindQueryFields(query: Map<String, Any>, answer: String, userContext: String): Boolean {
+    val schema = userContext.ifEmpty { getSchemaFromAnswer(answer) }
+    val fieldList = if (USE_SCHEMA) getFieldsFromSchema(schema) else extractFieldsFromExample(schema)
     return extractFieldsFromQuery(query).all { fieldList.contains(it)  }
 }
 
@@ -201,8 +202,9 @@ fun String.convertObjectIdSyntax(): String {
     return resultQuery
 }
 
-fun validateAggregateQueryFields(query: List<Map<String, Any>>, schema: String): Boolean {
-    val fieldList = getFieldsFromSchema(schema)
+fun validateAggregateQueryFields(query: List<Map<String, Any>>, answer: String, userContext: String): Boolean {
+    val schema = userContext.ifEmpty { getSchemaFromAnswer(answer) }
+    val fieldList = if (USE_SCHEMA) getFieldsFromSchema(schema) else extractFieldsFromExample(schema)
     val queryFieldList = mutableListOf<String>()
     query.forEach{
         queryFieldList.addAll(extractFieldsFromQuery(it))
@@ -229,9 +231,35 @@ fun String.convertToBsonSyntax(): String {
 
 fun getSchemaFromAnswer(answer: String): String {
     // Assuming collection does not have any periods(.)
+    val field = if (USE_SCHEMA) "schema" else "example"
     val collection = answer.split(".")[1]
     val schemaDocument = mongoClient.getDatabase("genai")
         .getCollection("schema_embeddings").find(Filters.eq("collectionName", collection))
-        .projection(Projections.include("schema")).first()
-    return schemaDocument.getString("schema")
+        .projection(Projections.include(field)).first()
+    return schemaDocument.getString(field)
+}
+
+fun extractFieldsFromExample(sampleDocument: String): List<String> {
+    val doc = OBJECT_MAPPER.readValue(sampleDocument, object: TypeReference<Map<String, Any>>(){})
+    return extractFieldsFromSampleDocument(doc)
+}
+
+fun extractFieldsFromSampleDocument(document: Map<String, Any>, parent: String = ""): List<String> {
+    val resultList = mutableSetOf<String>()
+    document.entries.forEach {
+            entry ->
+        val fieldKey = if(parent.isNullOrEmpty()) entry.key else "$parent.${entry.key}"
+        resultList.add(fieldKey)
+        if(entry.value is Map<*, *>) {
+            resultList.addAll(extractFieldsFromSampleDocument(entry.value as Map<String, Any>, fieldKey))
+        } else if(entry.value is List<*>) {
+            (entry.value as List<*>).forEach {
+                    item ->
+                if(item is Map<*, *>) {
+                    resultList.addAll(extractFieldsFromSampleDocument(item as Map<String, Any>, fieldKey))
+                }
+            }
+        }
+    }
+    return resultList.toList()
 }
