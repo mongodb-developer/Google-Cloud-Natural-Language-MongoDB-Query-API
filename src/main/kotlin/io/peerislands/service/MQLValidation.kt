@@ -165,7 +165,7 @@ fun extractFieldsFromQuery(mQuery: Map<String, Any>): List<String> {
             (entry.value as List<*>).forEach {
                     item ->
                 if(item is Map<*, *>) {
-                    resultList.addAll(extractFieldsFromQuery(entry.value as Map<String, Any>))
+                    resultList.addAll(extractFieldsFromQuery(item as Map<String, Any>))
                 }
             }
         }

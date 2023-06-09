@@ -12,8 +12,7 @@ fun executeMongoCommand(mql: String, db: String): String {
             connString.plus("/").plus(db),
             "--eval",
             mql,
-            "--quiet",
-            "| jq"
+            "--quiet"
         )
     )
     process.waitFor()

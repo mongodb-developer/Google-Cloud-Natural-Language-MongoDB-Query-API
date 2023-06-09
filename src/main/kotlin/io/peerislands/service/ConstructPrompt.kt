@@ -102,7 +102,9 @@ fun getExamples(questionType: String): String {
         .append("keywords", 1)
         .append("_id", 0)
     val filter = Document("keywords", questionType)
-    val results = examplesCollection.find(filter).projection(projection).toList()
+        .append("sequence", Document("\$gt", 0L))
+    val sort = Document("sequence", 1)
+    val results = examplesCollection.find(filter).projection(projection).sort(sort).toList()
 
     var examples = ""
     results.forEach {
@@ -110,9 +112,7 @@ fun getExamples(questionType: String): String {
         val exampleNum = 1 + index
         val operation = it["operation"] as String
         val example = it["example"] as String
-        examples = examples.plus("--Example ${exampleNum}:--\n")
-            .plus("--Example of ${operation}: --")
-            .plus("\n")
+        examples = examples.plus("## Example ${exampleNum} of ${operation}: ##\n")
             .plus(example)
             .plus("\n")
     }
@@ -121,26 +121,28 @@ fun getExamples(questionType: String): String {
 
 //TODO: Improve the prompt template
 val promptTemplate = """
-**Instructions: 
-Please convert the following natural language query into a MongoDB Query. 
-Output should be a valid MongoDB query.
-We should be able to run the query in mongo shell.
-Use the provided example for guidance.
-Generate the simplest MongoDB query possible.
-Pay attention to the schema provided. 
-Field names should match the schema.
-When referring to fields in a nested object, use dot notation. for example: 'address.city'
+***** General Instructions Start ***** 
+Convert the following natural language query into a MongoDB Query.
+Follow the instructions below to generate the query.
+Rule 1: Generate the query for the latest version of MongoDB.
+Rule 2: Infer collection name from question.
+Rule 3: Use ${'$'}expr operator when comparing two fields in same document. Use ${'$'} when referring to fields.
+Rule 4: Use quotes for field names.
+Rule 5: We should be able to run the query in mongo shell.
+Rule 6: Generate the simplest MongoDB query possible.
+Rule 7: Pay attention to the schema provided. Field names should match the schema.
 When including a field from nested object using dot notation, include the parent object. And enclose them in quotes. For example: { 'address.city' : 'New York' }
 When referring to fields in an array of nested objects, use the ${'$'}elemMatch operator. For example: { 'address': ${'$'}elemMatch: { 'city': 'New York' } }
-**
-------------------------------------------------------------
+Rule 9: Use the provided examples for guidance.
+Rule 10: count() is deprecated. Use countDocuments or estimatedDocumentCount. 
+***** General Instructions End *****
+############################################################
 Question: {{question}}
-Use ${'$'}expr operator when comparing two fields in same document. Use ${'$'} when referring to fields.
-------------------------------------------------------------
+############################################################
 Schema model:
 {{schema}}
-------------------------------------------------------------
+############################################################
 Example MongoDB Queries for reference:
 {{examples}}
-------------------------------------------------------------
+############################################################
 """.trimIndent()
