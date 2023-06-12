@@ -29,7 +29,7 @@ fun Application.configureRouting() {
 
             //STEP 3: Call GEN AI code-bison endpoint
             val genAIResponse: HttpResponse = callGenAIPredict(prompt)
-            val predictResponse = Gson().fromJson(genAIResponse.bodyAsText(), PredictResponse::class.java)
+            val predictResponse = GSON.fromJson(genAIResponse.bodyAsText(), PredictResponse::class.java)
 
             //STEP 4: Parse response and get answer / code
             val parsedCode: String = parseResponse(predictResponse)
@@ -38,14 +38,14 @@ fun Application.configureRouting() {
             //STEP 5: Run validations
             val (validSyntax, validSemantics) = validateResponse(parsedCode, jsonRequest.instances[0].context)
 
-            //STEP 6: Regenerate code if any errors
+            //STEP 6: Regenerate code if any errors. //TODO: To be implemented
             if (!validSyntax || !validSemantics) {
                 logger.info ( "Invalid response. Regenerating code..." )
             } else {
                 logger.info ( "Valid response. Proceeding..." )
             }
 
-            //STEP 7: Store question, prompt, and response in MongoDB
+            //STEP 7: Store question, prompt, and response in MongoDB. History
             storeInMongoDB(jsonRequest, prompt, predictResponse, parsedCode, validSyntax, validSemantics)
 
             //STEP 8: Return response
@@ -89,7 +89,6 @@ fun Application.configureRouting() {
         }
         post("/api/v1/get_examples_for_question") {
             val question = call.receiveText()
-//            val schema = getExamplesForQuestionVS(question)
             val questionType = evaluateQuestionType(question)
             val examplesFromQuestionType = getExamples(questionType)
             call.respondText(GSON.toJson(examplesFromQuestionType), ContentType.Application.Json)
