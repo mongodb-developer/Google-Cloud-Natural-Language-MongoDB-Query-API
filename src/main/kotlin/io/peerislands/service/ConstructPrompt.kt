@@ -115,6 +115,7 @@ fun getExamples(questionType: String): String {
         examples = examples.plus("## Example ${exampleNum} of ${operation}: ##\n")
             .plus(example)
             .plus("\n")
+            .plus("\n")
     }
     return examples
 }
@@ -139,10 +140,10 @@ Rule 10: count() is deprecated. Use countDocuments or estimatedDocumentCount.
 ############################################################
 Question: {{question}}
 ############################################################
-Schema model:
+Schema model # 
 {{schema}}
 ############################################################
-Example MongoDB Queries for reference:
+Example MongoDB Queries #   
 {{examples}}
 ############################################################
 """.trimIndent()
