@@ -15,6 +15,8 @@ import io.peerislands.mongoClient
 import org.bson.Document
 import java.util.Scanner
 
+//TODO: Re-design using ANTLR parser or similar
+
 private val logger = KtorSimpleLogger("io.peerislands.service.ChatHistory")
 private const val USE_SCHEMA = false
 data class ValidationResponse(
