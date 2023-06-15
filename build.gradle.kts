@@ -37,4 +37,8 @@ dependencies {
     implementation("org.mongodb:mongodb-driver-sync:4.9.1")
 
     implementation("com.google.code.gson:gson:2.8.9")
+    implementation(kotlin("stdlib-jdk8"))
+}
+kotlin {
+    jvmToolchain(11)
 }

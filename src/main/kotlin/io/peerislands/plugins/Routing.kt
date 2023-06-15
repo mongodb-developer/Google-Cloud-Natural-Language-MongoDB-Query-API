@@ -52,41 +52,48 @@ fun Application.configureRouting() {
             val response = buildResponse(parsedCode, prompt, validSyntax, validSemantics)
             call.respondText(response, ContentType.Application.Json)
         }
+
         get("/api/v1/history") {
             val limit = call.parameters["limit"]?.toInt() ?: 10
             val response = getHistory(limit)
             call.respondText(response, ContentType.Application.Json)
         }
+
         get("/api/v1/schema") {
             val collectionName = call.parameters["collection"] ?: "sample"
             val response = getSampleSchema(collectionName)
             call.respondText(response, ContentType.Application.Json)
         }
+
         get("/api/v1/collection_list") {
             val response = getCollectionList()
             call.respondText(response, ContentType.Application.Json)
         }
+
         post("/api/v1/create_schema_embedding") {
             //STEP 1: Get text from request
-            val request = call.receiveText() //TODO: Can we use call.receive<PredictRequest>() instead?
+            val request = call.receiveText() //TODO: Use call.receive<SchemaEmbeddingsRequest>() instead
             val schemaEmbeddingsRequest = Gson().fromJson(request, SchemaEmbeddingsRequest::class.java)
             val embeddings = storeSchemaEmbeddings(schemaEmbeddingsRequest)
 
             call.respondText(GSON.toJson(embeddings), ContentType.Application.Json)
         }
+
         post("/api/v1/create_example_embedding") {
             //STEP 1: Get text from request
-            val request = call.receiveText() //TODO: Can we use call.receive<PredictRequest>() instead?
+            val request = call.receiveText() //TODO: Use call.receive<ExampleEmbeddingsRequest>() instead
             val exampleEmbeddingsRequest = Gson().fromJson(request, ExampleEmbeddingsRequest::class.java)
             val embeddings = storeExampleEmbeddings(exampleEmbeddingsRequest)
 
             call.respondText(GSON.toJson(embeddings), ContentType.Application.Json)
         }
+
         post("/api/v1/get_schema_for_question") {
             val question = call.receiveText()
             val schema = getSchemaForQuestionVS(question)
             call.respondText(GSON.toJson(schema), ContentType.Application.Json)
         }
+
         post("/api/v1/get_examples_for_question") {
             val question = call.receiveText()
             val questionType = evaluateQuestionType(question)
@@ -95,7 +102,7 @@ fun Application.configureRouting() {
         }
 
         post("/api/v1/run_mql") {
-            val request = call.receiveText()
+            val request = call.receiveText() //TODO: Use call.receive<RunMongoCommandRequest>() instead
             val mongoCommandRequest = GSON.fromJson(request, RunMongoCommandRequest::class.java)
             val response = executeMongoCommand(mongoCommandRequest.command, mongoCommandRequest.db)
             call.respondText(response, ContentType.Application.Any)

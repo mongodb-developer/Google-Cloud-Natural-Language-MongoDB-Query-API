@@ -14,17 +14,18 @@ fun storeInMongoDB(jsonRequest: PredictRequest,
                    validSyntax: Boolean,
                    validSemantics: Boolean) {
     val collection = genAIDatabase.getCollection("history")
-    val document = Document()
-        .append("question", jsonRequest.instances[0].prefix)
-        .append("context", jsonRequest.instances[0].context)
-        .append("examples", jsonRequest.instances[0].examples)
-        .append("temperature", jsonRequest.parameters.temperature)
-        .append("maxOutputTokens", jsonRequest.parameters.maxOutputTokens)
-        .append("prompt", prompt)
-        .append("response", predictResponse.toString())
-        .append("code", parsedCode)
-        .append("validSyntax", validSyntax)
-        .append("validSemantics", validSemantics)
+    val document = Document(mapOf(
+        "question" to jsonRequest.instances[0].prefix,
+        "context" to jsonRequest.instances[0].context,
+        "examples" to jsonRequest.instances[0].examples,
+        "temperature" to jsonRequest.parameters.temperature,
+        "maxOutputTokens" to jsonRequest.parameters.maxOutputTokens,
+        "prompt" to prompt,
+        "response" to predictResponse.toString(),
+        "code" to parsedCode,
+        "validSyntax" to validSyntax,
+        "validSemantics" to validSemantics
+    ))
     val result = collection.insertOne(document)
     logger.info ( "Inserted document: $result" )
 }

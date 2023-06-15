@@ -7,6 +7,6 @@ import io.ktor.util.pipeline.*
 import io.peerislands.model.request.PredictRequest
 
 suspend fun PipelineContext<Unit, ApplicationCall>.predictRequest(): PredictRequest {
-    val request = call.receiveText()
+    val request = call.receiveText() //TODO: Use call.receive<PredictRequest>() instead
     return Gson().fromJson(request, PredictRequest::class.java)
 }

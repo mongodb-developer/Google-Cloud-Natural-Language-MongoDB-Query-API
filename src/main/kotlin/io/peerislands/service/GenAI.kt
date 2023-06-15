@@ -12,9 +12,8 @@ import org.bson.Document
 
 private val logger = KtorSimpleLogger("io.peerislands.service.GenAI")
 suspend fun callGenAIPredict(prompt: String): HttpResponse {
-    val token = credentials.refreshAccessToken() //TODO: Is this the right way to get the token?
+    val token = getGCloudAccessToken()
 
-    //REST API Call
     val response: HttpResponse = client.request(GENAI_PREDICT_ENDPOINT) {
         method = HttpMethod.Post
         headers {
@@ -27,8 +26,7 @@ suspend fun callGenAIPredict(prompt: String): HttpResponse {
 }
 
 suspend fun getTextEmbeddings(text: String): EmbeddingsResponse {
-//    GENAI_TEXT_EMBEDDING_ENDPOINT
-    val token = credentials.refreshAccessToken() //TODO: Is this the right way to get the token?
+    val token = getGCloudAccessToken()
 
     val payload = """
             {
@@ -41,7 +39,6 @@ suspend fun getTextEmbeddings(text: String): EmbeddingsResponse {
             """
         .trimIndent()
 
-    //REST API Call
     val response = client.request(GENAI_TEXT_EMBEDDING_ENDPOINT) {
         method = HttpMethod.Post
         headers {

@@ -1,6 +1,0 @@
-ktor:
-  application:
-    modules: [ io.peerislands.ApplicationKt.module ]
-    deployment:
-        port: ${PORT:8080}
-  endpoint: /api/v1
