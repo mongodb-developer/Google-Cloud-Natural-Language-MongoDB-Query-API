@@ -64,11 +64,12 @@ suspend fun storeSchemaEmbeddings(schemaEmbeddingsRequest: SchemaEmbeddingsReque
     logger.info ( "embeddings: $embeddings" )
 
     val collection = genAIDatabase.getCollection("schema_embeddings")
-    val document = Document()
-        .append("collectionName", schemaEmbeddingsRequest.collectionName)
-        .append("schema", schemaEmbeddingsRequest.schema)
-        .append("keywords", schemaEmbeddingsRequest.keywords)
-        .append("embeddings", embeddings.predictions[0].embeddings.values)
+    val document = Document(mapOf(
+        "collectionName" to schemaEmbeddingsRequest.collectionName,
+        "schema" to schemaEmbeddingsRequest.schema,
+        "keywords" to schemaEmbeddingsRequest.keywords,
+        "embeddings" to embeddings.predictions[0].embeddings.values
+    ))
     collection.insertOne(document)
 
     return embeddings
@@ -88,11 +89,12 @@ suspend fun storeExampleEmbeddings(exampleEmbeddingsRequest: ExampleEmbeddingsRe
     logger.info ( "embeddings: $embeddings" )
 
     val collection = genAIDatabase.getCollection("example_embeddings")
-    val document = Document()
-        .append("operation", exampleEmbeddingsRequest.operation)
-        .append("example", exampleEmbeddingsRequest.example)
-        .append("keywords", exampleEmbeddingsRequest.keywords)
-        .append("embeddings", embeddings.predictions[0].embeddings.values)
+    val document = Document(mapOf(
+        "operation" to exampleEmbeddingsRequest.operation,
+        "example" to exampleEmbeddingsRequest.example,
+        "keywords" to exampleEmbeddingsRequest.keywords,
+        "embeddings" to embeddings.predictions[0].embeddings.values
+    ))
     collection.insertOne(document)
 
     return embeddings

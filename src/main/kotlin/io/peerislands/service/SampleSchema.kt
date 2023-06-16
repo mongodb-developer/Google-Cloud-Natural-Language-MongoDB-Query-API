@@ -1,6 +1,7 @@
 package io.peerislands.service
 
 import io.ktor.util.logging.*
+import io.peerislands.GSON
 import io.peerislands.genAIDatabase
 import org.bson.Document
 
@@ -13,10 +14,7 @@ fun getSampleSchema(collectionName: String): String {
     val schema = collection.find(filter).first()
     logger.info ( "Schema: $schema" )
 
-    val gson = com.google.gson.GsonBuilder()
-        .setPrettyPrinting()
-        .create()
-    return gson.toJson(schema)
+    return GSON.toJson(schema)
 }
 
 fun getCollectionList(): String {

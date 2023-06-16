@@ -10,8 +10,10 @@ import com.mongodb.client.MongoDatabase
 import io.ktor.client.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.plugins.logging.Logger
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
 import io.peerislands.plugins.*
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.util.logging.*
@@ -25,6 +27,9 @@ fun Application.module() {
     install(CORS) {
         allowNonSimpleContentTypes = true
         anyHost()
+    }
+    install(ContentNegotiation){
+        json()
     }
     configureRouting()
 }
@@ -43,14 +48,14 @@ fun getGCloudAccessToken(): AccessToken {
 private val credentials: GoogleCredentials = GoogleCredentials.getApplicationDefault()
 
 //REST API Client
-val client = HttpClient() {
+val client = HttpClient {
     install(Logging) {
         logger = Logger.DEFAULT
         level = LogLevel.INFO
     }
 }
 
-val ENV = getenv()
+val ENV: MutableMap<String, String> = getenv()
 
 //Get endpoint from Environment Variables. Convert to String
 val GENAI_PREDICT_ENDPOINT = try {

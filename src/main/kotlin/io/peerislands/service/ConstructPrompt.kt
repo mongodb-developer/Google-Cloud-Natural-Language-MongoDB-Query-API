@@ -15,9 +15,9 @@ suspend fun constructPayload(jsonRequest: PredictRequest): String {
 
     val prompt = constructPrompt(question, userProvidedContext, userProvidedExamples)
 
-    logger.info( "Prompt: $prompt" )
+    logger.info("Prompt: $prompt")
 
-    val payload = """
+    return """
             {
                 "instances": [
                     {
@@ -34,7 +34,6 @@ suspend fun constructPayload(jsonRequest: PredictRequest): String {
             }
             """
         .trimIndent()
-    return payload.toString()
 }
 
 private fun constructPrompt(
@@ -120,7 +119,6 @@ fun getExamples(questionType: String): String {
     return examples
 }
 
-//TODO: Improve the prompt template
 val promptTemplate = """
 ***** General Instructions Start ***** 
 Convert the following natural language query into a MongoDB Query.

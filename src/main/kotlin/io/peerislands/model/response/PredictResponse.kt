@@ -2,7 +2,9 @@ package io.peerislands.model.response
 
 import com.google.gson.annotations.SerializedName
 import io.peerislands.GSON
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class PredictResponse(
     @SerializedName("predictions")
     val predictions: List<Prediction>
@@ -12,6 +14,7 @@ data class PredictResponse(
     }
 }
 
+@Serializable
 data class Prediction(
     @SerializedName("content")
     val content: String,
@@ -21,13 +24,15 @@ data class Prediction(
     val safetyAttributes: SafetyAttributes
 )
 
+@Serializable
 data class RecitationResult(
     @SerializedName("recitations")
-    val recitations: List<Any>, // You can replace 'Any' with the appropriate data class if needed
+    val recitations: List<String>, // You can replace 'Any' with the appropriate data class if needed
     @SerializedName("recitationAction")
     val recitationAction: String
 )
 
+@Serializable
 data class SafetyAttributes(
     @SerializedName("blocked")
     val blocked: Boolean,

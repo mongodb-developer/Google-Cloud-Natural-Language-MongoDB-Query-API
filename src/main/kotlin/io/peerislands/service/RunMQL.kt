@@ -2,7 +2,9 @@ package io.peerislands.service
 
 import java.util.*
 
+//TODO: Get from application.conf
 private const val connString = "mongodb://localhost:27017"
+
 fun executeMongoCommand(mql: String, db: String): String {
     println("Executing: $mql")
     val runtime = Runtime.getRuntime()
@@ -20,9 +22,4 @@ fun executeMongoCommand(mql: String, db: String): String {
     scanner.useDelimiter("\\A").use { s ->
         return if (s.hasNext()) s.next() else ""
     }
-}
-fun main() {
-    val mql = "db.movies.find({\"year\": 1933 }).limit(2)"
-    val db = "sample_mflix"
-    executeMongoCommand(mql, db)
 }

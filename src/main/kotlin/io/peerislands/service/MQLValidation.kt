@@ -19,6 +19,9 @@ import java.util.Scanner
 
 private val logger = KtorSimpleLogger("io.peerislands.service.ChatHistory")
 private const val USE_SCHEMA = false
+private const val TEST_DB = "test_genai_mongodb"
+private const val TEST_COLLECTION = "test"
+
 data class ValidationResponse(
     val validSyntax: Boolean,
     val validSemantics: Boolean
@@ -45,6 +48,11 @@ fun validateResponse(answer: String, userContext: String): ValidationResponse {
             logger.error ( "Error validating response: ${e.message}" )
             false
         }
+    try {
+        dropTestDB()
+    } catch (e: Exception) {
+        logger.error ( "Error dropping Test DB" )
+    }
 
     val validSemantics: Boolean =
         try {
@@ -57,19 +65,24 @@ fun validateResponse(answer: String, userContext: String): ValidationResponse {
     return ValidationResponse(validSyntax, validSemantics)
 }
 
+fun dropTestDB() {
+    val db = mongoClient.getDatabase(TEST_DB)
+    db.drop()
+}
+
 fun validateSemantics(answer: String, userContext: String): Boolean {
     val extractedQuery = extractQuery(answer)
     return when (getOperation(answer)) {
         "insertOne", "insertMany" -> true // No validation for now
         "find" -> validateFindQueryFields(extractedQuery[0] as Map<String, Any>, answer, userContext)
         "aggregate" -> validateAggregateQueryFields(extractedQuery[0] as List<Map<String, Any>>, answer, userContext)
-        else -> true // Need to be false. Temporarily returning true to bypass other operations
+        else -> true
     }
 }
 
 fun validateSyntax(answer: String): Boolean {
-    val db = mongoClient.getDatabase("test")
-    val collection = db.getCollection("test")
+    val db = mongoClient.getDatabase(TEST_DB)
+    val collection = db.getCollection(TEST_COLLECTION)
     return try {
         val extractedQuery = extractQuery(answer)
         when (getOperation(answer)) {

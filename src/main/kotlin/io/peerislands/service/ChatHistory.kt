@@ -1,6 +1,7 @@
 package io.peerislands.service
 
 import io.ktor.util.logging.*
+import io.peerislands.GSON
 import io.peerislands.genAIDatabase
 import io.peerislands.model.request.PredictRequest
 import io.peerislands.model.response.PredictResponse
@@ -39,8 +40,5 @@ fun getHistory(limit: Int): String {
 
     val history = mutableListOf<Document>()
     documents.forEach { doc -> history.add(doc) }
-    val gson = com.google.gson.GsonBuilder()
-        .setPrettyPrinting()
-        .create()
-    return gson.toJson(history)
+    return GSON.toJson(history)
 }
