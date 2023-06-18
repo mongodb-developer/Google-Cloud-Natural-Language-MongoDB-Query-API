@@ -1,9 +1,10 @@
 package io.peerislands.service
 
+import io.peerislands.MONGODB_URI
 import java.util.*
 
 //TODO: Get from application.conf
-private const val connString = "mongodb://localhost:27017"
+//private const val connString = "mongodb://localhost:27017"
 
 fun executeMongoCommand(mql: String, db: String): String {
     println("Executing: $mql")
@@ -11,7 +12,7 @@ fun executeMongoCommand(mql: String, db: String): String {
     val process = runtime.exec(
         arrayOf(
             "mongosh",
-            connString.plus("/").plus(db),
+            MONGODB_URI.plus("/").plus(db),
             "--eval",
             mql,
             "--quiet"

@@ -1,3 +1,5 @@
+import io.ktor.plugin.features.*
+
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
@@ -20,6 +22,7 @@ application {
 repositories {
     mavenCentral()
 }
+
 
 dependencies {
     implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
@@ -46,4 +49,25 @@ dependencies {
 }
 kotlin {
     jvmToolchain(11)
+}
+
+ktor {
+    docker {
+        jreVersion.set(JreVersion.JRE_17)
+        portMappings.set(listOf(
+            DockerPortMapping(
+                outsideDocker = 8080,
+                insideDocker = 8080,
+                DockerPortMappingProtocol.TCP
+            )
+        ))
+        externalRegistry.set(
+            DockerImageRegistry.googleContainerRegistry(
+                projectName = provider { "peer-poc" },
+                appName = provider { project.name },
+                username = provider { "" },
+                password = provider { "" }
+            )
+        )
+    }
 }
