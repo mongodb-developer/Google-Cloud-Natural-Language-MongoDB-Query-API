@@ -13,7 +13,7 @@ services:
     ports:
       - '8080:8080'
     environment:
-      - MONGODB_URI=mongodb+srv://genai:g3nai-m0ngo@sampledata.2zvcpfj.mongodb.net/?retryWrites=true&w=majority
+      - MONGODB_URI=mongodb+srv://<username>:<password>@sampledata.2zvcpfj.mongodb.net/?retryWrites=true&w=majority
       - GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/gcloud_creds.json
       - GENAI_PREDICT_ENDPOINT=https://us-central1-aiplatform.googleapis.com/v1/projects/peer-poc/locations/us-central1/publishers/google/models/code-bison:predict
       - GENAI_TEXT_EMBEDDING_ENDPOINT=https://us-central1-aiplatform.googleapis.com/v1/projects/peer-poc/locations/us-central1/publishers/google/models/textembedding-gecko:predict

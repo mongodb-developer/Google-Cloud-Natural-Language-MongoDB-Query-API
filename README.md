@@ -1,6 +1,9 @@
 # Generative AI Natural Language to MongoDB Query API
 
-This is a demo of an app that translates natural language to MongoDB queries using Generative AI through Google Cloud's Vertex AI Codey API. 
+This is a demo of an application that translates utilizing the power of Generative AI and Google Cloud's Vertex AI Codey API to transform natural language into MongoDB queries. 
+
+<img alt="Architecture diagram of the demo application" src="./images/Natural%20Language%20to%20MongoDB%20Query%20API.svg" height="700" />
+
 
 ## Contributors ✨
 
